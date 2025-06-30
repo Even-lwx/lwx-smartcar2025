@@ -1,119 +1,107 @@
+#include "zf_common_headfile.h"
 #include "Image Binarization.h"
 
-#include "zf_device_mt9v03x.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+// 使用摄像头实际尺寸定义
+#define IMAGE_HEIGHT MT9V03X_H
+#define IMAGE_WIDTH MT9V03X_W
 
+extern uint8 image_copy[MT9V03X_H][MT9V03X_W];
+unsigned char binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]; // 最终输出结果的数组
 
-extern uint8 mt9v03x_image[MT9V03X_H][MT9V03X_W];
+// 优化版大津法二值化函数（使用单峰特性提前终止）
+int otsuThreshold(unsigned char image[IMAGE_HEIGHT][IMAGE_WIDTH])
+{
+    unsigned int histogram[256] = {0}; // 灰度直方图
+    unsigned int total_pixels = (unsigned int)IMAGE_HEIGHT * IMAGE_WIDTH;
+    unsigned long long sum = 0;         // 总灰度值
+    unsigned long long sumB = 0;        // 背景类灰度总和
+    unsigned int wB = 0;                // 背景类像素数
+    unsigned long long maxVariance = 0; // 最大类间方差
+    int threshold = 0;                  // 最佳阈值
+    int declineCount = 0;               // 方差下降计数器
+    const int maxDecline = 2;           // 最大允许连续下降次数
 
-
-// 图像尺寸定义（根据实际摄像头分辨率修改）
-#define IMAGE_HEIGHT 120
-#define IMAGE_WIDTH  188
-
-// 大津法二值化函数
-int otsuThreshold(unsigned char image[IMAGE_HEIGHT][IMAGE_WIDTH]) {
-    int histogram[256] = {0};  // 灰度直方图
-    int total_pixels = IMAGE_HEIGHT * IMAGE_WIDTH;
-    double sum = 0.0;          // 总灰度值
-    double sumB = 0.0;         // 背景类灰度总和
-    int wB = 0;                // 背景类像素数
-    int wF = 0;                // 前景类像素数
-    double maxVariance = 0.0;   // 最大类间方差
-    int threshold = 0;          // 最佳阈值
-    
-    // 步骤1: 计算灰度直方图
-    for (int i = 0; i < IMAGE_HEIGHT; i++) {
-        for (int j = 0; j < IMAGE_WIDTH; j++) {
+    // 步骤1: 计算灰度直方图和总灰度值
+    for (int i = 0; i < IMAGE_HEIGHT; i++)
+    {
+        for (int j = 0; j < IMAGE_WIDTH; j++)
+        {
             unsigned char pixel = image[i][j];
             histogram[pixel]++;
-            sum += (double)pixel;
+            sum += pixel;
         }
     }
-    
-    // 步骤2: 遍历所有可能的阈值
-    for (int t = 0; t < 256; t++) {
-        wB += histogram[t];  // 背景类像素数增加
-        if (wB == 0) continue;
-        
-        wF = total_pixels - wB;  // 前景类像素数
-        if (wF == 0) break;
-        
-        sumB += (double)(t * histogram[t]);  // 背景类灰度总和
-        
-        double mB = sumB / wB;              // 背景类平均灰度
-        double mF = (sum - sumB) / wF;      // 前景类平均灰度
-        
+
+    // 步骤2: 遍历可能的阈值（利用单峰特性提前终止）
+    for (int t = 0; t < 256; t++)
+    {
+        if (histogram[t] == 0)
+            continue;
+
+        wB += histogram[t];
+        if (wB == 0)
+            continue;
+
+        unsigned int wF = total_pixels - wB;
+        if (wF == 0)
+            break;
+
+        sumB += (unsigned long long)t * histogram[t];
+
+        // 计算背景和前景的平均灰度
+        unsigned long long mB = sumB / wB;
+        unsigned long long mF = (sum - sumB) / wF;
+
         // 计算类间方差
-        double variance = (double)wB * (double)wF * (mB - mF) * (mB - mF);
-        
-        // 更新最佳阈值
-        if (variance > maxVariance) {
+        unsigned long long variance = (unsigned long long)wB * wF * (mB - mF) * (mB - mF);
+
+        // 检测方差下降趋势（利用单峰特性）
+        if (variance >= maxVariance)
+        {
+            // 发现更大的方差，更新最大值
             maxVariance = variance;
             threshold = t;
+            declineCount = 0; // 重置下降计数器
+        }
+        else
+        {
+            // 方差开始下降
+            declineCount++;
+
+            // 如果连续下降次数超过阈值，提前终止循环
+            if (declineCount > maxDecline)
+            {
+                break;
+            }
         }
     }
-    
+
     return threshold;
 }
 
 // 应用阈值进行二值化
-void applyThreshold(unsigned char input[IMAGE_HEIGHT][IMAGE_WIDTH], 
-                   unsigned char output[IMAGE_HEIGHT][IMAGE_WIDTH], 
-                   int threshold) {
-    for (int i = 0; i < IMAGE_HEIGHT; i++) {
-        for (int j = 0; j < IMAGE_WIDTH; j++) {
+void applyThreshold(unsigned char input[IMAGE_HEIGHT][IMAGE_WIDTH],
+                    unsigned char output[IMAGE_HEIGHT][IMAGE_WIDTH],
+                    int threshold)
+{
+    for (int i = 0; i < IMAGE_HEIGHT; i++)
+    {
+        for (int j = 0; j < IMAGE_WIDTH; j++)
+        {
+            // 使用条件表达式优化二值化
             output[i][j] = (input[i][j] > threshold) ? 255 : 0;
         }
     }
 }
 
-// 简单的3x3均值滤波（可选）
-void meanFilter(unsigned char input[IMAGE_HEIGHT][IMAGE_WIDTH], 
-               unsigned char output[IMAGE_HEIGHT][IMAGE_WIDTH]) {
-    for (int i = 1; i < IMAGE_HEIGHT - 1; i++) {
-        for (int j = 1; j < IMAGE_WIDTH - 1; j++) {
-            int sum = 0;
-            // 3x3邻域求和
-            for (int m = -1; m <= 1; m++) {
-                for (int n = -1; n <= 1; n++) {
-                    sum += input[i + m][j + n];
-                }
-            }
-            output[i][j] = sum / 9;
-        }
-    }
+void image_output()
+{
+    // 1. 计算大津法阈值（直接使用原始图像）
+    int threshold = otsuThreshold(image_copy);
+
+    // 2. 应用阈值进行二值化
+    applyThreshold(image_copy, binaryImage, threshold);
+
+    // 3. 现在binaryImage包含处理结果
+    // 可以用于显示或其他处理
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

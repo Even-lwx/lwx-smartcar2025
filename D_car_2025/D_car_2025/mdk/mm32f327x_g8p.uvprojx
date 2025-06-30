@@ -420,6 +420,11 @@
               <FileType>1</FileType>
               <FilePath>..\code\key.c</FilePath>
             </File>
+            <File>
+              <FileName>Image Binarization.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\Image Binarization.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -506,6 +511,9 @@
               <FilePath>..\..\libraries\zf_common\zf_common_typedef.h</FilePath>
             </File>
           </Files>
+        </Group>
+        <Group>
+          <GroupName>zf_components</GroupName>
         </Group>
         <Group>
           <GroupName>zf_driver</GroupName>

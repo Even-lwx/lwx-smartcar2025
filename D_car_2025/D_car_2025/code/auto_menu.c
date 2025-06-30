@@ -680,8 +680,12 @@ void photo_display()
 			while (1)
 			{
 				memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);
+
 				ips200_show_gray_image(0, 0, (const uint8 *)image_copy, MT9V03X_W, MT9V03X_H, MT9V03X_W, MT9V03X_H, 0);
+				image_output();
+				ips200_show_gray_image(0, 120, (const uint8 *)binaryImage, MT9V03X_W, MT9V03X_H, MT9V03X_W, MT9V03X_H, 0);
 				mt9v03x_finish_flag = 0;
+
 				if (!gpio_get_level(KEY_1))
 				{
 					assist_menu();
@@ -720,6 +724,6 @@ void FUN_INIT()
 	fun_init(day_night, "day_night");
 	fun_init(rand_color, "rand_color");
 	fun_init(photo_display, "photo_dis");
-	
+
 	// fun_init(NULL_FUN, "NULL_FUN3");
 }

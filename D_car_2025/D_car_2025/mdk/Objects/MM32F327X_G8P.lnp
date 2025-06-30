@@ -3,6 +3,7 @@
 ".\objects\isr.o"
 ".\objects\auto_menu.o"
 ".\objects\key.o"
+".\objects\image binarization.o"
 ".\objects\zf_common_clock.o"
 ".\objects\zf_common_debug.o"
 ".\objects\zf_common_fifo.o"

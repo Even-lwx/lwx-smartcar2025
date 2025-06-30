@@ -17,7 +17,7 @@
 #define MAP_INIT_END (0x01 << 1)
 
 // 二级菜单元素个数
-#define SON_NUM (6) // 推荐为2的整数倍
+#define SON_NUM (8) // 推荐为2的整数倍
 
 #define STR_LEN_MAX 12
 #define MOUSE_DIS 10

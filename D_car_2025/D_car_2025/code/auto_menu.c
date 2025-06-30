@@ -652,7 +652,7 @@ void day_night()
 		}
 	}
 }
-
+// 更改背景颜色
 void rand_color()
 {
 	if (IS_OK)
@@ -663,7 +663,35 @@ void rand_color()
 		showstr(0, (SON_NUM + 1) * 16, "rand");
 	}
 }
-// 菜单空闲函数
+
+/*
+以下是用户自己的自定义函数
+1.菜单进入图像显示和常规参数显示界面
+
+*/
+
+void photo_display()
+{
+	if (IS_OK)
+	{
+		ips200_clear();
+		if (mt9v03x_finish_flag)
+		{
+			while (1)
+			{
+				memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);
+				ips200_show_gray_image(0, 0, (const uint8 *)image_copy, MT9V03X_W, MT9V03X_H, MT9V03X_W, MT9V03X_H, 0);
+				mt9v03x_finish_flag = 0;
+				if (!gpio_get_level(KEY_1))
+				{
+					assist_menu();
+					break;
+				}
+			}
+		}
+	}
+}
+
 void NULL_FUN()
 {
 }
@@ -678,7 +706,7 @@ void UNIT_SET()
 {
 	// 菜单单元调参参数初始化
 	unit_param_set(&test_a, TYPE_DOUBLE, 0.5, 3, 3, NORMAL_PAR, "test_a");
-	unit_param_set(&test_b, TYPE_DOUBLE, 2, 6,3, NORMAL_PAR, "test_b");
+	unit_param_set(&test_b, TYPE_DOUBLE, 2, 6, 3, NORMAL_PAR, "test_b");
 	unit_param_set(&test_c, TYPE_DOUBLE, 11.11, 4, 4, NORMAL_PAR, "test_c");
 	unit_param_set(&test_d, TYPE_UINT16, 1, 6, 0, NORMAL_PAR, "test_d");
 	unit_param_set(&test_e, TYPE_UINT32, 1, 6, 0, NORMAL_PAR, "test_e");
@@ -691,5 +719,7 @@ void FUN_INIT()
 	fun_init(NULL_FUN, "NULL_FUN2");
 	fun_init(day_night, "day_night");
 	fun_init(rand_color, "rand_color");
-	fun_init(NULL_FUN, "NULL_FUN2");
+	fun_init(photo_display, "photo_dis");
+	
+	// fun_init(NULL_FUN, "NULL_FUN3");
 }

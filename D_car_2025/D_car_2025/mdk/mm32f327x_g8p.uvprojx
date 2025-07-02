@@ -425,6 +425,21 @@
               <FileType>1</FileType>
               <FilePath>..\code\Image Binarization.c</FilePath>
             </File>
+            <File>
+              <FileName>encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\encoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>imu660rb.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\imu660rb.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

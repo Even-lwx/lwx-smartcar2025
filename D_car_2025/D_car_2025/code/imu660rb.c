@@ -7,8 +7,11 @@
 #define Ki beta*beta
 #define Kp 2*beta
 #define DT 0.005f // 采样时间
-#define beta 2.146/tau
-#define tau 1.0
+#define beta 2.146/TAU
+#define TAU tau
+
+float tau;//此变量通过菜单设置
+
 typedef struct
 {
     float q0, q1, q2, q3;

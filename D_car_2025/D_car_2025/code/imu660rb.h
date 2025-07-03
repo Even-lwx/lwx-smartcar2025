@@ -14,7 +14,7 @@ void get_attitude_angles(float* roll, float* pitch, float* yaw);
 
 
 extern float roll, pitch, yaw;
-
+extern float tau;//²Ëµ¥µ÷²Î
 
 #include <math.h>
 

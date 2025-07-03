@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\MM32F327X_G8P.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\MM32F327X_G8P.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6230001: Last Updated: Thu Jul  3 13:53:05 2025
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6230001: Last Updated: Thu Jul  3 23:07:59 2025
 <BR><P>
 <H3>Maximum Stack Usage =       1240 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -480,10 +480,13 @@ Global Symbols
 <LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_fp_digits
 </UL>
 
-<P><STRONG><a name="[70]"></a>__aeabi_ddiv</STRONG> (Thumb, 222 bytes, Stack size 32 bytes, ddiv.o(.text), UNUSED)
-<BR><BR>[Calls]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_double_round
+<P><STRONG><a name="[70]"></a>__aeabi_ddiv</STRONG> (Thumb, 222 bytes, Stack size 32 bytes, ddiv.o(.text))
+<BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = __aeabi_ddiv &rArr; _double_round
 </UL>
-<BR>[Called By]<UL><LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_fp_digits
+<BR>[Calls]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_double_round
+</UL>
+<BR>[Called By]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MahonyUpdate
+<LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_fp_digits
 </UL>
 
 <P><STRONG><a name="[84]"></a>__aeabi_fcmple</STRONG> (Thumb, 28 bytes, Stack size 0 bytes, fcmple.o(.text))
@@ -752,10 +755,11 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[49]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[81]"></a>MahonyUpdate</STRONG> (Thumb, 1684 bytes, Stack size 472 bytes, imu660rb.o(.text.MahonyUpdate))
-<BR><BR>[Stack]<UL><LI>Max Depth = 560<LI>Call Chain = MahonyUpdate &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
+<P><STRONG><a name="[81]"></a>MahonyUpdate</STRONG> (Thumb, 1890 bytes, Stack size 552 bytes, imu660rb.o(.text.MahonyUpdate))
+<BR><BR>[Stack]<UL><LI>Max Depth = 640<LI>Call Chain = MahonyUpdate &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
-<BR>[Calls]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
+<BR>[Calls]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ddiv
+<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
 <LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_fsub
 <LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_fdiv
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_fcmple
@@ -846,8 +850,8 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_mm32f3277g.o(RESET)
 </UL>
-<P><STRONG><a name="[8c]"></a>UNIT_SET</STRONG> (Thumb, 220 bytes, Stack size 48 bytes, auto_menu.o(.text.UNIT_SET))
-<BR><BR>[Stack]<UL><LI>Max Depth = 148<LI>Call Chain = UNIT_SET &rArr; unit_param_set &rArr; dad_link
+<P><STRONG><a name="[8c]"></a>UNIT_SET</STRONG> (Thumb, 218 bytes, Stack size 40 bytes, auto_menu.o(.text.UNIT_SET))
+<BR><BR>[Stack]<UL><LI>Max Depth = 140<LI>Call Chain = UNIT_SET &rArr; unit_param_set &rArr; dad_link
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;unit_param_set
 </UL>
@@ -1102,13 +1106,13 @@ Global Symbols
 <P><STRONG><a name="[79]"></a>dm1xa_sound_callback</STRONG> (Thumb, 256 bytes, Stack size 16 bytes, zf_device_dm1xa.o(.text.dm1xa_sound_callback))
 <BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = dm1xa_sound_callback &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
-<BR>[Calls]<UL><LI><a href="#[c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;timer_clear
-<LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;timer_get
+<BR>[Calls]<UL><LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;timer_get
 <LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_d2iz
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ui2f
 <LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
 <LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_get_level
 <LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
+<LI><a href="#[c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;timer_clear
 </UL>
 <BR>[Called By]<UL><LI><a href="#[2f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EXTI15_10_IRQHandler
 </UL>

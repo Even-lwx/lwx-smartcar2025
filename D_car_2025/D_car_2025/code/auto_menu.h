@@ -126,6 +126,15 @@ typedef struct MENU_UNIT
 #define MEM_SIZE 100
 #endif
 
+/*flashœ‡πÿ≈‰÷√*/
+#define USE_FLASH
+#define PARAM_FLASH_SECTOR 127
+#define PARAM_FLASH_PAGE 0
+
+
+
+
+
 extern void menu_init(void);
 
 void show_process(void *parameter);

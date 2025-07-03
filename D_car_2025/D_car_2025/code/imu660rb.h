@@ -11,6 +11,11 @@ void imu_init(void);
 void pit_imu_handler (void);
 void get_attitude_angles(float* roll, float* pitch, float* yaw);
 
+
+
+extern float roll, pitch, yaw;
+
+
 #include <math.h>
 
 // IMUÂË²¨Æ÷½á¹¹Ìå

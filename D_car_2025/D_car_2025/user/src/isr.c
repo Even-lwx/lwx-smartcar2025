@@ -138,7 +138,7 @@ void TIM4_IRQHandler(void)
 void TIM5_IRQHandler(void)
 {
     // 此处编写用户代码
-		
+
     // 此处编写用户代码
     TIM5->SR &= ~TIM5->SR; // 清空中断状态
 }
@@ -150,7 +150,7 @@ void TIM5_IRQHandler(void)
 void TIM6_IRQHandler(void)
 {
     // 此处编写用户代码
-		extern void pit_encoder_handler (void);
+    extern void pit_encoder_handler(void);
     pit_encoder_handler();
     // 此处编写用户代码
     TIM6->SR &= ~TIM6->SR; // 清空中断状态
@@ -163,7 +163,7 @@ void TIM6_IRQHandler(void)
 void TIM7_IRQHandler(void)
 {
     // 此处编写用户代码
-		extern void pit_imu_handler(void);
+    extern void pit_imu_handler(void);
     pit_imu_handler();
     // 此处编写用户代码
     TIM7->SR &= ~TIM7->SR; // 清空中断状态
@@ -175,7 +175,7 @@ void TIM7_IRQHandler(void)
 //-------------------------------------------------------------------------------------------------------------------
 void TIM8_UP_IRQHandler(void)
 {
-   
+
     // 此处编写用户代码
 
     // 此处编写用户代码

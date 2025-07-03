@@ -2,204 +2,169 @@
 
 #include "imu660rb.h"
 
-// 全局滤波器实例
-IMUFilter imu_filter;
+// 全局变量和结构体定义
+#define RtA 57.2957795f
+#define Ki beta*beta
+#define Kp 2*beta
+#define DT 0.005f // 采样时间
+#define beta 2.146/tau
+#define tau 1.0
+typedef struct
+{
+    float q0, q1, q2, q3;
+    float exInt, eyInt, ezInt;
+} Quater;
 
-// 校准状态标志
-static uint8_t calibration_phase = 1; // 1表示正在校准
+static Quater q = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float roll, pitch, yaw; // 欧拉角（弧度）
+
+// 校准相关变量
+static uint8_t calibration_phase = 1;
+static uint32_t calib_count = 0;
+static float gyro_bias[3] = {0};
 
 void imu_init(void)
 {
-    gpio_init(LED1, GPO, GPIO_HIGH, GPO_PUSH_PULL); // 初始化 LED1
-    
+    gpio_init(LED1, GPO, GPIO_HIGH, GPO_PUSH_PULL);
+
     // 初始化IMU传感器
-    while(1) {
-        if(imu963ra_init()) {
+    while (1)
+    {
+        if (imu963ra_init())
+        {
             printf("\r\nIMU963RA init error.");
-        } else {
+        }
+        else
+        {
             break;
         }
-        gpio_toggle_level(LED1); // 翻转LED
+        gpio_toggle_level(LED1);
     }
-    
-    // 初始化姿态滤波器
-    IMUFilter_Init(&imu_filter, 0.98f);
-    
+
     // 初始化5ms定时器
     pit_ms_init(IMU_PIT, 5);
-    
-    printf("IMU system initialized.\n");
+
+    // 重置校准状态
+    calibration_phase = 1;
+    calib_count = 0;
+    memset(gyro_bias, 0, sizeof(gyro_bias));
 }
 
+// Mahony滤波算法更新函数
+void MahonyUpdate(float ax, float ay, float az, float gx, float gy, float gz)
+{
+    // 归一化加速度
+    float norm = sqrtf(ax * ax + ay * ay + az * az);
+    if (norm > 1e-6f)
+    {
+        ax /= norm;
+        ay /= norm;
+        az /= norm;
+    }
+    else
+    {
+        return; // 无效数据跳过
+    }
 
+    // 计算重力方向
+    float gravity_x = 2.0f * (q.q1 * q.q3 - q.q0 * q.q2);
+    float gravity_y = 2.0f * (q.q0 * q.q1 + q.q2 * q.q3);
+    float gravity_z = q.q0 * q.q0 - q.q1 * q.q1 - q.q2 * q.q2 + q.q3 * q.q3;
 
+    // 计算误差（叉积）
+    float error_x = ay * gravity_z - az * gravity_y;
+    float error_y = az * gravity_x - ax * gravity_z;
+    float error_z = ax * gravity_y - ay * gravity_x;
 
+    // 积分误差
+    q.exInt += error_x * Ki;
+    q.eyInt += error_y * Ki;
+    q.ezInt += error_z * Ki;
 
+    // 修正陀螺仪数据
+    gx += Kp * error_x + q.exInt;
+    gy += Kp * error_y + q.eyInt;
+    gz += Kp * error_z + q.ezInt;
+
+    // 四元数微分方程
+    float q0_dot = (-q.q1 * gx - q.q2 * gy - q.q3 * gz) * DT;
+    float q1_dot = (q.q0 * gx - q.q3 * gy + q.q2 * gz) * DT;
+    float q2_dot = (q.q3 * gx + q.q0 * gy - q.q1 * gz) * DT;
+    float q3_dot = (-q.q2 * gx + q.q1 * gy + q.q0 * gz) * DT;
+
+    // 更新四元数
+    q.q0 += q0_dot;
+    q.q1 += q1_dot;
+    q.q2 += q2_dot;
+    q.q3 += q3_dot;
+
+    // 四元数归一化
+    norm = sqrtf(q.q0 * q.q0 + q.q1 * q.q1 + q.q2 * q.q2 + q.q3 * q.q3);
+    if (norm > 1e-6f)
+    {
+        float inv_norm = 1.0f / norm;
+        q.q0 *= inv_norm;
+        q.q1 *= inv_norm;
+        q.q2 *= inv_norm;
+        q.q3 *= inv_norm;
+    }
+
+    // 计算欧拉角
+    float q0q0 = q.q0 * q.q0;
+    float q1q1 = q.q1 * q.q1;
+    float q2q2 = q.q2 * q.q2;
+    float q3q3 = q.q3 * q.q3;
+
+    roll = atan2f(2.0f * (q.q2 * q.q3 + q.q0 * q.q1),
+                  q0q0 - q1q1 - q2q2 + q3q3);
+    pitch = asinf(-2.0f * (q.q1 * q.q3 - q.q0 * q.q2));
+    yaw = atan2f(2.0f * (q.q1 * q.q2 + q.q0 * q.q3),
+                 q0q0 + q1q1 - q2q2 - q3q3);
+    // 转换为度
+    roll *= RtA;
+    pitch *= RtA;
+    yaw *= RtA;
+}
 
 // 5ms定时器中断处理函数
 void pit_imu_handler(void)
 {
     // 获取传感器数据
-    imu963ra_get_acc();  // 更新全局变量: imu963ra_acc_x, y, z
-    imu963ra_get_gyro(); // 更新全局变量: imu963ra_gyro_x, y, z
-    
-    // 校准阶段（设备需保持静止）
-    if (calibration_phase) {
-        IMUFilter_CalibrateGyro(&imu_filter, 
-                               imu963ra_gyro_x, 
-                               imu963ra_gyro_y, 
-                               imu963ra_gyro_z);
-        
-        // 检查校准是否完成
-        if (imu_filter.is_calibrated) {
+    imu963ra_get_acc();
+    imu963ra_get_gyro();
+
+    if (calibration_phase)
+    {
+        // 校准阶段：累积陀螺仪数据
+        gyro_bias[0] += imu963ra_gyro_x;
+        gyro_bias[1] += imu963ra_gyro_y;
+        gyro_bias[2] += imu963ra_gyro_z;
+        calib_count++;
+
+        // 完成校准（假设5秒：1000个样本）
+        if (calib_count >= 100)
+        {
+            gyro_bias[0] /= calib_count;
+            gyro_bias[1] /= calib_count;
+            gyro_bias[2] /= calib_count;
             calibration_phase = 0;
-            printf("IMU calibration complete. Starting attitude tracking.\n");
+            printf("IMU calibration complete.\n");
         }
-    } 
-    // 正常姿态更新阶段
-    else {
-        IMUFilter_Update(&imu_filter,
-                        imu963ra_acc_x, imu963ra_acc_y, imu963ra_acc_z,
-                        imu963ra_gyro_x, imu963ra_gyro_y, imu963ra_gyro_z);
+    }
+    else
+    {
+        // 正常姿态更新
+        // 转换并校准陀螺仪数据 (单位: rad/s)
+        float gx = (imu963ra_gyro_x - gyro_bias[0]) / 131.0f / RtA;
+        float gy = (imu963ra_gyro_y - gyro_bias[1]) / 131.0f / RtA;
+        float gz = (imu963ra_gyro_z - gyro_bias[2]) / 131.0f / RtA;
+
+        // 转换加速度数据 (单位: g)
+        float ax = imu963ra_acc_x / 16384.0f;
+        float ay = imu963ra_acc_y / 16384.0f;
+        float az = imu963ra_acc_z / 16384.0f;
+
+        // 执行Mahony滤波更新
+        MahonyUpdate(ax, ay, az, gx, gy, gz);
     }
 }
-
-
-// 获取当前欧拉角（主循环中调用）
-void get_attitude_angles(float* roll, float* pitch, float* yaw)
-{
-    IMUFilter_GetEulerAngles(&imu_filter, roll, pitch, yaw);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 常数定义
-#define DT 0.005f        // 5ms时间间隔 (固定值)
-#define GRAVITY 9.80665f // 重力加速度
-#define DEG2RAD 0.01745329252f  // 度转弧度
-#define RAD2DEG 57.2957795131f  // 弧度转度
-
-// 初始化滤波器
-void IMUFilter_Init(IMUFilter* filter, float alpha) {
-    filter->alpha = alpha;
-    filter->roll = 0.0f;
-    filter->pitch = 0.0f;
-    filter->yaw = 0.0f;
-    filter->gx_bias = 0.0f;
-    filter->gy_bias = 0.0f;
-    filter->gz_bias = 0.0f;
-    filter->is_calibrated = 0;
-    filter->is_first_update = 1;
-}
-
-// 陀螺仪校准函数（在静止状态下调用）
-void IMUFilter_CalibrateGyro(IMUFilter* filter, 
-                            float gyro_x, float gyro_y, float gyro_z) {
-    // 累加校准数据
-    static int sample_count = 0;
-    static float sum_x = 0, sum_y = 0, sum_z = 0;
-    
-    if (sample_count < 500) { // 500次采样（2.5秒）
-        sum_x += gyro_x;
-        sum_y += gyro_y;
-        sum_z += gyro_z;
-        sample_count++;
-    } else if (!filter->is_calibrated) {
-        // 计算平均值作为零偏
-        filter->gx_bias = sum_x / sample_count;
-        filter->gy_bias = sum_y / sample_count;
-        filter->gz_bias = sum_z / sample_count;
-        filter->is_calibrated = 1;
-        
-        // 重置累加器
-        sum_x = 0;
-        sum_y = 0;
-        sum_z = 0;
-        sample_count = 0;
-        
-        // 可选：打印校准结果
-        printf("Gyro Calibration Complete:\n");
-        printf("X bias: %.4f\n", filter->gx_bias);
-        printf("Y bias: %.4f\n", filter->gy_bias);
-        printf("Z bias: %.4f\n", filter->gz_bias);
-    }
-}
-
-// 快速atan2近似函数（优化计算速度）
-static float fast_atan2(float y, float x) {
-    // 使用有理函数近似，精度约0.005rad
-    //const float PI = 3.14159265359f;
-    const float PI_2 = 1.57079632679f;
-    const float PI_4 = 0.78539816339f;
-    
-    float abs_y = fabsf(y) + 1e-10f; // 避免除零
-    float r, angle;
-    
-    if (x >= 0) {
-        r = (x - abs_y) / (x + abs_y);
-        angle = PI_4 - r*(PI_4 + 0.273f*r*r);
-    } else {
-        r = (x + abs_y) / (abs_y - x);
-        angle = PI_2 + PI_4 - r*(PI_4 + 0.273f*r*r);
-    }
-    return y < 0 ? -angle : angle;
-}
-
-// 姿态更新函数（在5ms定时器中调用）
-void IMUFilter_Update(IMUFilter* filter, 
-                     float acc_x, float acc_y, float acc_z,
-                     float gyro_x, float gyro_y, float gyro_z) {
-    // 单位转换 (加速度g→m/s2, 陀螺仪deg/s→rad/s)
-    float ax = acc_x * GRAVITY;
-    float ay = acc_y * GRAVITY;
-    float az = acc_z * GRAVITY;
-    
-    // 应用陀螺仪校准
-    float gx = (gyro_x - filter->gx_bias) * DEG2RAD;
-    float gy = (gyro_y - filter->gy_bias) * DEG2RAD;
-    float gz = (gyro_z - filter->gz_bias) * DEG2RAD;
-    
-    if (filter->is_first_update) {
-        // 初次更新使用加速度计初始化姿态
-        filter->roll = fast_atan2(ay, az);
-        filter->pitch = fast_atan2(-ax, sqrtf(ay*ay + az*az));
-        filter->is_first_update = 0;
-    } else {
-        // 陀螺仪积分
-        float roll_gyro = filter->roll + gx * DT;
-        float pitch_gyro = filter->pitch + gy * DT;
-        filter->yaw += gz * DT;
-
-        // 加速度计测量
-        float roll_acc = fast_atan2(ay, az);
-        float pitch_acc = fast_atan2(-ax, sqrtf(ay*ay + az*az));
-
-        // 互补滤波融合
-        filter->roll = filter->alpha * roll_gyro + (1 - filter->alpha) * roll_acc;
-        filter->pitch = filter->alpha * pitch_gyro + (1 - filter->alpha) * pitch_acc;
-    }
-}
-
-// 获取欧拉角（角度制）
-void IMUFilter_GetEulerAngles(IMUFilter* filter, 
-                             float* roll, float* pitch, float* yaw) {
-    *roll = filter->roll * RAD2DEG;
-    *pitch = filter->pitch * RAD2DEG;
-    *yaw = filter->yaw * RAD2DEG;
-}
-
-

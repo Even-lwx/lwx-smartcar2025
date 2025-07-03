@@ -98,16 +98,13 @@ void all_init(void)
 	//    ips200_show_string(0, 16, "init success.");
 	//	system_delay_ms(1000);
 	imu_init();
-  motor_init();//电机初始化
-	encoder_init();//编码器初始化
-	
+	motor_init();	// 电机初始化
+	encoder_init(); // 编码器初始化
 
 	ips200_clear();
 
-
 	pit_ms_init(TIM2_PIT, 1);
-	interrupt_set_priority(TIM2_IRQn, 0);//按键的中断
-	
+	interrupt_set_priority(TIM2_IRQn, 0); // 按键的中断
 }
 
 // void display(void)
@@ -153,34 +150,25 @@ void all_init(void)
 //	else if(!key4_flag) ips200_show_string(30, 212+offset, "  ");
 //}
 
-
-
-
-
 int main(void)
 {
 	all_init();
 	// clock_init(SYSTEM_CLOCK_120M); // 初始化芯片时钟 工作频率为 120MHz
 	// debug_init();                  // 初始化默认 Debug UART
 
-
 	while (1)
 	{
-		Load(0,0);
+		Load(0, 0);
 		// 运行菜单
 		show_process(NULL);
 		system_delay_ms(20);
 		image_output();
 		// printf("ENCODER_1 counter \t%d .\r\n", encoder_data_1);                 // 输出编码器计数信息
-     //printf("ENCODER_2 counter \t%d .\r\n", encoder_data_2);                 // 输出编码器计数信息  
-		
-		float roll, pitch, yaw;
-		get_attitude_angles(&roll, &pitch, &yaw);
-		ips200_show_float(0,50,roll,4,4);
-		ips200_show_float(0,70,pitch,4,4);
-//		printf("IMU963RA acc data: x=%5d, y=%5d, z=%5d\n", imu963ra_acc_x, imu963ra_acc_y, imu963ra_acc_z);
-//    printf("IMU963RA gyro data:  x=%5d, y=%5d, z=%5d\n", imu963ra_gyro_x, imu963ra_gyro_y, imu963ra_gyro_z);
-		printf("%2f, %2f, %2f\n", roll, pitch, yaw);
+		// printf("ENCODER_2 counter \t%d .\r\n", encoder_data_2);                 // 输出编码器计数信息
+
+		//		printf("IMU963RA acc data: x=%5d, y=%5d, z=%5d\n", imu963ra_acc_x, imu963ra_acc_y, imu963ra_acc_z);
+		//    printf("IMU963RA gyro data:  x=%5d, y=%5d, z=%5d\n", imu963ra_gyro_x, imu963ra_gyro_y, imu963ra_gyro_z);
+				printf("%2f, %2f, %2f\n", roll, pitch, yaw);
 
 		//		if(mt9v03x_finish_flag)
 		//		{
@@ -192,7 +180,6 @@ int main(void)
 		// display();
 	}
 }
-
 
 // **************************** 代码区域 ****************************
 

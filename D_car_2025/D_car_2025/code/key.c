@@ -1,6 +1,9 @@
 #include "zf_common_headfile.h"
 #include "key.h"
 #include "auto_menu.h"
+
+
+
 uint8 key1_state = 0;	   // 按键动作状态
 uint8 key1_state_last = 0; // 上一次按键动作状态
 uint8 key1_flag = 0;	   //   1按下，松开0
@@ -20,6 +23,87 @@ uint8 key4_state = 0;	   // 按键动作状态
 uint8 key4_state_last = 0; // 上一次按键动作状态
 uint8 key4_flag = 0;	   //   1按下，松开0
 uint8 key4_count = 0;
+uint32 count_time = 1000;
+
+
+void key_into()
+{
+	
+	gpio_init(KEY_1, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
+	gpio_init(KEY_2, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
+	gpio_init(KEY_3, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
+	gpio_init(KEY_4, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
+	
+//	pit_ms_init(TIM2_PIT, 1);
+//	interrupt_set_priority(TIM2_IRQn, 0); // 按键的中断
+	
+#ifdef MENU_USE_RTT
+	rt_thread_t tid;
+	key1_sem = rt_sem_create("key1", 0, RT_IPC_FLAG_FIFO); // 创建按键的信号量，当按键按下就释放信号量，在需要使用按键的地方获取信号量即可
+	key2_sem = rt_sem_create("key2", 0, RT_IPC_FLAG_FIFO);
+	key3_sem = rt_sem_create("key3", 0, RT_IPC_FLAG_FIFO);
+	key4_sem = rt_sem_create("key4", 0, RT_IPC_FLAG_FIFO);
+
+	button_feedback_sem = rt_sem_create("button_feedback", 1, RT_IPC_FLAG_FIFO);
+
+	tid = rt_thread_create("button", button_entry, RT_NULL, 512, 12, 2);
+	// 启动按键线程
+	if (RT_NULL != tid)
+	{
+		rt_thread_startup(tid);
+	}
+#endif
+}
+
+
+/*原来的按键是放在中断里面的，现在采取在主循环扫描*/
+//void pit_key_handler(void){
+// // 此处编写用户代码
+//    if (key1_flag)
+//    {
+//        key1_count++;
+//        if (key1_count > count_time)
+//        {
+//            key1_count = 0;
+//            key1_flag = 0;
+//        }
+//    }
+//    if (key2_flag)
+//    {
+//        key2_count++;
+//        if (key2_count > count_time)
+//        {
+//            key2_count = 0;
+//            key2_flag = 0;
+//        }
+//    }
+//    if (key3_flag)
+//    {
+//        key3_count++;
+//        if (key3_count > count_time)
+//        {
+//            key3_count = 0;
+//            key3_flag = 0;
+//        }
+//    }
+//    if (key4_flag)
+//    {
+//        key4_count++;
+//        if (key4_count > count_time)
+//        {
+//            key4_count = 0;
+//            key4_flag = 0;
+//        }
+//    }
+
+
+//}
+
+
+
+
+
+
 
 #ifdef MENU_USE_RTT
 // 按键信号量
@@ -191,27 +275,4 @@ void button_entry(void *parameter)
 #endif
 }
 
-void key_into()
-{
 
-	gpio_init(KEY_1, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
-	gpio_init(KEY_2, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
-	gpio_init(KEY_3, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
-	gpio_init(KEY_4, GPI, GPIO_HIGH, GPI_PULL_UP); // 初始化为GPIO浮空输入 默认上拉高电平
-#ifdef MENU_USE_RTT
-	rt_thread_t tid;
-	key1_sem = rt_sem_create("key1", 0, RT_IPC_FLAG_FIFO); // 创建按键的信号量，当按键按下就释放信号量，在需要使用按键的地方获取信号量即可
-	key2_sem = rt_sem_create("key2", 0, RT_IPC_FLAG_FIFO);
-	key3_sem = rt_sem_create("key3", 0, RT_IPC_FLAG_FIFO);
-	key4_sem = rt_sem_create("key4", 0, RT_IPC_FLAG_FIFO);
-
-	button_feedback_sem = rt_sem_create("button_feedback", 1, RT_IPC_FLAG_FIFO);
-
-	tid = rt_thread_create("button", button_entry, RT_NULL, 512, 12, 2);
-	// 启动按键线程
-	if (RT_NULL != tid)
-	{
-		rt_thread_startup(tid);
-	}
-#endif
-}

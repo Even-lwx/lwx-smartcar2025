@@ -2396,7 +2396,7 @@
 #include "zf_common_headfile.h"
 #include "auto_menu.h"
 #include "key.h"
-#include "zf_driver_flash.h"  // 包含您提供的Flash驱动头文件
+#include "zf_driver_flash.h" // 包含您提供的Flash驱动头文件
 
 // 按键信号量及按键反馈信号量
 #ifdef MENU_USE_RTT
@@ -2439,7 +2439,8 @@ void (*current_operation_menu)(void);
 static uint8_t display_mode = 0; // 0:正常菜单, 1:显示图像, 2:传感器参数, 3:发车程序
 
 // 传感器数据结构体
-typedef struct {
+typedef struct
+{
     float temperature;
     float humidity;
     float pressure;
@@ -2596,14 +2597,14 @@ void unit_param_set(void *p_param, type_value t, float delta, uint8 num, uint8 p
         }
     }
     p_middle = p2;
-    
+
     p1->par_set = p1_par;
     p1->par_set->p_par = p_param;
     p1->par_set->par_type = t;
     p1->par_set->delta = delta;
     p1->par_set->num = num;
     p1->par_set->point_num = point_num;
-    
+
     p1->type_t = t1;
     memset(p1->name, 0, STR_LEN_MAX);
     strcpy(p1->name, _name);
@@ -2706,54 +2707,60 @@ void flash_save_parameters()
 #ifdef USE_FLASH
     menu_unit *p = P_dad_head->enter;
     uint32_t index = 0;
-    
+
     // 清空缓冲区
     flash_buffer_clear();
-    
+
     while (1)
     {
         if (p->type_t == NORMAL_PAR || p->type_t == PID_PAR)
         {
             // 根据参数类型保存
-            switch (p->par_set->par_type) {
-                case TYPE_FLOAT:
-                    flash_union_buffer[index].float_type = *(float*)p->par_set->p_par;
-                    break;
-                case TYPE_INT:
-                    flash_union_buffer[index].int32_type = *(int*)p->par_set->p_par;
-                    break;
-                case TYPE_UINT16:
-                    flash_union_buffer[index].uint16_type = *(uint16_t*)p->par_set->p_par;
-                    break;
-                case TYPE_UINT32:
-                    flash_union_buffer[index].uint32_type = *(uint32_t*)p->par_set->p_par;
-                    break;
-                default:
-                    // 默认按uint32处理
-                    flash_union_buffer[index].uint32_type = *(uint32_t*)p->par_set->p_par;
-                    break;
+            switch (p->par_set->par_type)
+            {
+            case TYPE_FLOAT:
+                flash_union_buffer[index].float_type = *(float *)p->par_set->p_par;
+                break;
+            case TYPE_INT:
+                flash_union_buffer[index].int32_type = *(int *)p->par_set->p_par;
+                break;
+            case TYPE_UINT16:
+                flash_union_buffer[index].uint16_type = *(uint16_t *)p->par_set->p_par;
+                break;
+            case TYPE_UINT32:
+                flash_union_buffer[index].uint32_type = *(uint32_t *)p->par_set->p_par;
+                break;
+            default:
+                // 默认按uint32处理
+                flash_union_buffer[index].uint32_type = *(uint32_t *)p->par_set->p_par;
+                break;
             }
             index++;
-            
+
             // 检查缓冲区是否已满
-            if (index >= FLASH_DATA_BUFFER_SIZE) {
+            if (index >= FLASH_DATA_BUFFER_SIZE)
+            {
                 break;
             }
         }
-        
-        if (p->m_index[1] < p->up->m_index[1]) {
+
+        if (p->m_index[1] < p->up->m_index[1])
+        {
             p = p->up;
-        } else {
+        }
+        else
+        {
             p = p->back->up->enter;
         }
-        
+
         // 遇到函数项结束遍历
-        if (p->type_t == USE_FUN) break;
+        if (p->type_t == USE_FUN)
+            break;
     }
-    
+
     // 将缓冲区数据写入Flash
     flash_write_page_from_buffer(PARAM_FLASH_SECTOR, PARAM_FLASH_PAGE);
-    
+
     // 显示保存成功提示
     showstr(0, (SON_NUM + 1) * DIS_Y, "Params Saved!");
 #endif
@@ -2764,54 +2771,61 @@ void flash_load_parameters()
 {
 #ifdef USE_FLASH
     // 检查Flash中是否有数据
-    if (flash_check(PARAM_FLASH_SECTOR, PARAM_FLASH_PAGE)) {
+    if (flash_check(PARAM_FLASH_SECTOR, PARAM_FLASH_PAGE))
+    {
         // 从Flash读取数据到缓冲区
         flash_read_page_to_buffer(PARAM_FLASH_SECTOR, PARAM_FLASH_PAGE);
-        
+
         menu_unit *p = P_dad_head->enter;
         uint32_t index = 0;
-        
+
         while (1)
         {
             if (p->type_t == NORMAL_PAR || p->type_t == PID_PAR)
             {
                 // 根据参数类型加载
-                switch (p->par_set->par_type) {
-                    case TYPE_FLOAT:
-                        *(float*)p->par_set->p_par = flash_union_buffer[index].float_type;
-                        break;
-                    case TYPE_INT:
-                        *(int*)p->par_set->p_par = flash_union_buffer[index].int32_type;
-                        break;
-                    case TYPE_UINT16:
-                        *(uint16_t*)p->par_set->p_par = flash_union_buffer[index].uint16_type;
-                        break;
-                    case TYPE_UINT32:
-                        *(uint32_t*)p->par_set->p_par = flash_union_buffer[index].uint32_type;
-                        break;
-                    default:
-                        // 默认按uint32处理
-                        *(uint32_t*)p->par_set->p_par = flash_union_buffer[index].uint32_type;
-                        break;
+                switch (p->par_set->par_type)
+                {
+                case TYPE_FLOAT:
+                    *(float *)p->par_set->p_par = flash_union_buffer[index].float_type;
+                    break;
+                case TYPE_INT:
+                    *(int *)p->par_set->p_par = flash_union_buffer[index].int32_type;
+                    break;
+                case TYPE_UINT16:
+                    *(uint16_t *)p->par_set->p_par = flash_union_buffer[index].uint16_type;
+                    break;
+                case TYPE_UINT32:
+                    *(uint32_t *)p->par_set->p_par = flash_union_buffer[index].uint32_type;
+                    break;
+                default:
+                    // 默认按uint32处理
+                    *(uint32_t *)p->par_set->p_par = flash_union_buffer[index].uint32_type;
+                    break;
                 }
                 index++;
-                
+
                 // 检查是否已读取所有保存的参数
-                if (index >= FLASH_DATA_BUFFER_SIZE) {
+                if (index >= FLASH_DATA_BUFFER_SIZE)
+                {
                     break;
                 }
             }
-            
-            if (p->m_index[1] < p->up->m_index[1]) {
+
+            if (p->m_index[1] < p->up->m_index[1])
+            {
                 p = p->up;
-            } else {
+            }
+            else
+            {
                 p = p->back->up->enter;
             }
-            
+
             // 遇到函数项结束遍历
-            if (p->type_t == USE_FUN) break;
+            if (p->type_t == USE_FUN)
+                break;
         }
-        
+
         // 显示加载成功提示
         showstr(0, (SON_NUM + 1) * DIS_Y, "Params Loaded!");
     }
@@ -3068,26 +3082,31 @@ void handle_image_display()
     {
         // 拷贝图像数据
         memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);
-        
+
         // 显示原始图像
-        ips200_show_gray_image(0, 0, (const uint8 *)image_copy, 
-                              MT9V03X_W, MT9V03X_H, 
-                              MT9V03X_W, MT9V03X_H, 0);
-        
+        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
+                               MT9V03X_W, MT9V03X_H,
+                               MT9V03X_W, MT9V03X_H, 0);
+
         // 显示处理后的二值化图像
-        ips200_show_gray_image(0, 120, (const uint8 *)binaryImage, 
-                              MT9V03X_W, MT9V03X_H, 
-                              MT9V03X_W, MT9V03X_H, 0);
-        
+        ips200_show_gray_image(0, 120, (const uint8 *)binaryImage,
+                               MT9V03X_W, MT9V03X_H,
+                               MT9V03X_W, MT9V03X_H, 0);
+        //				// 显示边界图像
+        //        ips200_show_gray_image(0, 0, (const uint8 *)boundary_image,
+        //                              MT9V03X_W, MT9V03X_H,
+        //                              MT9V03X_W, MT9V03X_H, 0);
+        // camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
+
         // 显示退出提示
         ips200_show_string(10, 240, "Press BACK to exit");
-        
+
         mt9v03x_finish_flag = 0;
     }
-    
-    
+
     // 检测返回键
-    if (button1) {
+    if (button1)
+    {
         display_mode = 0;  // 退出图像模式
         is_clear_flag = 1; // 设置清屏标志
         assist_menu();     // 刷新菜单显示
@@ -3098,25 +3117,24 @@ void handle_image_display()
 void handle_sensor_display()
 {
     // 更新传感器数据（这里使用模拟数据）
-    
-    
+
     // 清屏并显示标题
-    
+
     ips200_show_string(10, 10, "Sensor Parameters");
     ips200_draw_line(10, 30, 230, 30, RGB565_BLUE);
-    ips200_show_string(0,50,"roll:");
-		ips200_show_string(0,70,"pitch:");
-		ips200_show_string(0,90,"yaw:");
-   	ips200_show_float(60,50,roll,4,4);
-		ips200_show_float(60,70,pitch,4,4);
-		ips200_show_float(60,90,yaw,4,4);
-		
-    
+    ips200_show_string(0, 50, "roll:");
+    ips200_show_string(0, 70, "pitch:");
+    ips200_show_string(0, 90, "yaw:");
+    ips200_show_float(60, 50, roll, 4, 4);
+    ips200_show_float(60, 70, pitch, 4, 4);
+    ips200_show_float(60, 90, yaw, 4, 4);
+
     // 显示退出提示
     ips200_show_string(10, 240, "Press BACK to exit");
-    
+
     // 检测返回键
-    if (button1) {
+    if (button1)
+    {
         display_mode = 0;  // 退出传感器显示模式
         is_clear_flag = 1; // 设置清屏标志
         assist_menu();     // 刷新菜单显示
@@ -3127,71 +3145,78 @@ void handle_sensor_display()
 void handle_launch_program()
 {
     static uint32_t counter = 0;
-    
-    switch(launch_state) {
-        case 0: // 准备阶段
-            ips200_clear();
-            ips200_show_string(10, 10, "Launch Program");
-            ips200_draw_line(10, 30, 230, 30, RGB565_RED);
-            ips200_show_string(15, 50, "Ready to launch");
-            ips200_show_string(15, 80, "Press OK to start");
-            
-            if (button2) {
-                launch_state = 1;
-                countdown = 5;
-                counter = 0; // 重置计数器
+
+    switch (launch_state)
+    {
+    case 0: // 准备阶段
+        ips200_clear();
+        ips200_show_string(10, 10, "Launch Program");
+        ips200_draw_line(10, 30, 230, 30, RGB565_RED);
+        ips200_show_string(15, 50, "Ready to launch");
+        ips200_show_string(15, 80, "Press OK to start");
+
+        if (button2)
+        {
+            launch_state = 1;
+            countdown = 5;
+            counter = 0; // 重置计数器
+        }
+        break;
+
+    case 1: // 倒计时阶段
+        ips200_clear();
+        ips200_show_string(10, 10, "Launch Program");
+        ips200_draw_line(10, 30, 230, 30, RGB565_RED);
+
+        char count_str[30];
+        sprintf(count_str, "Launch in: %d", countdown);
+        ips200_show_string(50, 80, count_str);
+
+        // 简单倒计时处理（使用计数器模拟时间）
+        counter++;
+        if (counter >= 100)
+        { // 大约1秒（假设每10ms调用一次）
+            counter = 0;
+            if (countdown > 0)
+            {
+                countdown--;
             }
-            break;
-            
-        case 1: // 倒计时阶段
-            ips200_clear();
-            ips200_show_string(10, 10, "Launch Program");
-            ips200_draw_line(10, 30, 230, 30, RGB565_RED);
-            
-            char count_str[30];
-            sprintf(count_str, "Launch in: %d", countdown);
-            ips200_show_string(50, 80, count_str);
-            
-            // 简单倒计时处理（使用计数器模拟时间）
-            counter++;
-            if (counter >= 100) { // 大约1秒（假设每10ms调用一次）
-                counter = 0;
-                if (countdown > 0) {
-                    countdown--;
-                } else {
-                    launch_state = 2; // 进入发车状态
-                }
+            else
+            {
+                launch_state = 2; // 进入发车状态
             }
-            break;
-            
-        case 2: // 发车状态
-            ips200_clear();
-            ips200_show_string(10, 10, "Launch Program");
-            ips200_draw_line(10, 30, 230, 30, RGB565_GREEN);
-            ips200_show_string(15, 50, "Launching!");
-            
-            // 这里添加实际的发车控制代码
-            // 例如：motor_control(100); // 控制电机速度
-            
-            // 显示状态信息
-            ips200_show_string(15, 80, "Running...");
-            ips200_show_string(15, 100, "Speed: 100%");
-            break;
+        }
+        break;
+
+    case 2: // 发车状态
+        ips200_clear();
+        ips200_show_string(10, 10, "Launch Program");
+        ips200_draw_line(10, 30, 230, 30, RGB565_GREEN);
+        ips200_show_string(15, 50, "Launching!");
+
+        // 这里添加实际的发车控制代码
+        // 例如：motor_control(100); // 控制电机速度
+
+        // 显示状态信息
+        ips200_show_string(15, 80, "Running...");
+        ips200_show_string(15, 100, "Speed: 100%");
+        break;
     }
-    
+
     // 显示退出提示
     ips200_show_string(10, 240, "Press BACK to exit");
-    
+
     // 检测返回键
-    if (button1) {
+    if (button1)
+    {
         display_mode = 0;  // 退出程序模式
         launch_state = 0;  // 重置状态
         is_clear_flag = 1; // 设置清屏标志
-        
+
         // 这里添加停止车辆的控制代码
         // 例如：motor_control(0); // 停止电机
-        
-        assist_menu();     // 刷新菜单显示
+
+        assist_menu(); // 刷新菜单显示
     }
 }
 
@@ -3208,77 +3233,30 @@ void show_process(void *parameter)
         button4 = (RT_EOK == rt_sem_take(key4_sem, RT_WAITING_NO));
 
         // 根据当前模式执行不同操作
-        switch (display_mode) {
-            case 1: // 图像显示模式
-                handle_image_display();
-                break;
-                
-            case 2: // 传感器参数显示模式
-                handle_sensor_display();
-                break;
-                
-            case 3: // 发车程序模式
-                handle_launch_program();
-                break;
-                
-            default: // 正常菜单模式
-                is_clear_flag = is_menu_clear();
-
-                if (button1 || button2 || button3 || button4)
-                {
-                    rt_sem_release(button_feedback_sem);
-                }
-
-                if (is_clear_flag)
-                    clear_hhh(0, 0, SCREEN_W, SON_NUM * 16, IPS200_BGCOLOR);
-
-                if (button1 == 1)
-                    p_unit = p_unit->back;
-                else if (button2 == 1)
-                    p_unit = p_unit->enter;
-                else if (button3 == 1)
-                    p_unit = p_unit->up;
-                else if (button4 == 1)
-                    p_unit = p_unit->down;
-
-                is_first_in_page();
-
-                // 显示函数
-                show_menu();
-
-                // 效果函数
-                fun_menu();
-
-                p_unit_last = p_unit;
-                break;
-        }
-        
-        // 线程挂起
-        rt_thread_mdelay(10);
-    }
-#else
-    // 裸机环境下的按键处理
-    button_entry(NULL);
-    
-    // 根据当前模式执行不同操作
-    switch (display_mode) {
+        switch (display_mode)
+        {
         case 1: // 图像显示模式
             handle_image_display();
             break;
-            
+
         case 2: // 传感器参数显示模式
             handle_sensor_display();
             break;
-            
+
         case 3: // 发车程序模式
             handle_launch_program();
             break;
-            
+
         default: // 正常菜单模式
             is_clear_flag = is_menu_clear();
 
+            if (button1 || button2 || button3 || button4)
+            {
+                rt_sem_release(button_feedback_sem);
+            }
+
             if (is_clear_flag)
-                clear();
+                clear_hhh(0, 0, SCREEN_W, SON_NUM * 16, IPS200_BGCOLOR);
 
             if (button1 == 1)
                 p_unit = p_unit->back;
@@ -3299,6 +3277,55 @@ void show_process(void *parameter)
 
             p_unit_last = p_unit;
             break;
+        }
+
+        // 线程挂起
+        rt_thread_mdelay(10);
+    }
+#else
+    // 裸机环境下的按键处理
+    button_entry(NULL);
+
+    // 根据当前模式执行不同操作
+    switch (display_mode)
+    {
+    case 1: // 图像显示模式
+        handle_image_display();
+        break;
+
+    case 2: // 传感器参数显示模式
+        handle_sensor_display();
+        break;
+
+    case 3: // 发车程序模式
+        handle_launch_program();
+        break;
+
+    default: // 正常菜单模式
+        is_clear_flag = is_menu_clear();
+
+        if (is_clear_flag)
+            clear();
+
+        if (button1 == 1)
+            p_unit = p_unit->back;
+        else if (button2 == 1)
+            p_unit = p_unit->enter;
+        else if (button3 == 1)
+            p_unit = p_unit->up;
+        else if (button4 == 1)
+            p_unit = p_unit->down;
+
+        is_first_in_page();
+
+        // 显示函数
+        show_menu();
+
+        // 效果函数
+        fun_menu();
+
+        p_unit_last = p_unit;
+        break;
     }
 #endif
 }
@@ -3384,26 +3411,28 @@ void photo_display()
 {
     if (IS_OK)
     {
-        display_mode = 1;  // 进入图像显示模式
-        ips200_clear();    // 清屏
+        display_mode = 1; // 进入图像显示模式
+        ips200_clear();   // 清屏
     }
 }
 
 // 进入传感器参数显示界面
 void enter_sensor_display()
 {
-    if (IS_OK) {
-        display_mode = 2;  // 进入传感器显示模式
-        ips200_clear();    // 清屏
+    if (IS_OK)
+    {
+        display_mode = 2; // 进入传感器显示模式
+        ips200_clear();   // 清屏
     }
 }
 
 // 进入发车程序界面
 void enter_launch_program()
 {
-    if (IS_OK) {
-        display_mode = 3;  // 进入发车程序模式
-        ips200_clear();    // 清屏
+    if (IS_OK)
+    {
+        display_mode = 3; // 进入发车程序模式
+        ips200_clear();   // 清屏
     }
 }
 
@@ -3421,10 +3450,9 @@ void UNIT_SET()
     // 菜单单元调参参数初始化
     unit_param_set(&test_a, TYPE_FLOAT, 0.5, 3, 3, NORMAL_PAR, "test_a");
     unit_param_set(&test_b, TYPE_FLOAT, 2, 6, 3, NORMAL_PAR, "test_b");
-    unit_param_set(&test_d, TYPE_UINT16, 1, 6, 0, NORMAL_PAR, "test_d");   
-		unit_param_set(&tau, TYPE_FLOAT, 0.5, 3, 3, NORMAL_PAR, "tau"); 
-	unit_param_set(&aa, TYPE_INT, 0.5, 3, 3, NORMAL_PAR, "u"); 
-
+    unit_param_set(&test_d, TYPE_UINT16, 1, 6, 0, NORMAL_PAR, "test_d");
+    unit_param_set(&tau, TYPE_FLOAT, 0.5, 3, 3, NORMAL_PAR, "tau");
+    unit_param_set(&aa, TYPE_INT, 0.5, 3, 3, NORMAL_PAR, "u");
 }
 
 void FUN_INIT()
@@ -3435,7 +3463,7 @@ void FUN_INIT()
     fun_init(day_night, "day_night");
     fun_init(rand_color, "rand_color");
     fun_init(photo_display, "photo_dis");
-    fun_init(enter_sensor_display, "Data");     // 传感器数据显示入口
-    fun_init(enter_launch_program, "Launch"); // 发车程序入口
-    fun_init(flash_save_parameters, "Save_Par");   // 保存参数功能
+    fun_init(enter_sensor_display, "Data");      // 传感器数据显示入口
+    fun_init(enter_launch_program, "Launch");    // 发车程序入口
+    fun_init(flash_save_parameters, "Save_Par"); // 保存参数功能
 }

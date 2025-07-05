@@ -35,18 +35,6 @@
 
 #include "isr.h"
 
-extern int32 encoder1;
-extern int32 encoder2;
-
-extern uint32 key1_count;
-extern uint32 key2_count;
-extern uint32 key3_count;
-extern uint32 key4_count;
-extern uint8 key1_flag;
-extern uint8 key2_flag;
-extern uint8 key3_flag;
-extern uint8 key4_flag;
-extern uint32 count_time;
 
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     TIM1 的定时器更新中断服务函数 启动 .s 文件定义 不允许修改函数名称
@@ -66,43 +54,7 @@ void TIM1_UP_IRQHandler(void)
 //-------------------------------------------------------------------------------------------------------------------
 void TIM2_IRQHandler(void)
 {
-    // 此处编写用户代码
-    if (key1_flag)
-    {
-        key1_count++;
-        if (key1_count > count_time)
-        {
-            key1_count = 0;
-            key1_flag = 0;
-        }
-    }
-    if (key2_flag)
-    {
-        key2_count++;
-        if (key2_count > count_time)
-        {
-            key2_count = 0;
-            key2_flag = 0;
-        }
-    }
-    if (key3_flag)
-    {
-        key3_count++;
-        if (key3_count > count_time)
-        {
-            key3_count = 0;
-            key3_flag = 0;
-        }
-    }
-    if (key4_flag)
-    {
-        key4_count++;
-        if (key4_count > count_time)
-        {
-            key4_count = 0;
-            key4_flag = 0;
-        }
-    }
+   
     // 此处编写用户代码
     TIM2->SR &= ~TIM2->SR; // 清空中断状态
 }
@@ -150,8 +102,8 @@ void TIM5_IRQHandler(void)
 void TIM6_IRQHandler(void)
 {
     // 此处编写用户代码
-    extern void pit_encoder_handler(void);
-    pit_encoder_handler();
+    extern void Control();
+    Control();
     // 此处编写用户代码
     TIM6->SR &= ~TIM6->SR; // 清空中断状态
 }

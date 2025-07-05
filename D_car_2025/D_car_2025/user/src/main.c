@@ -64,15 +64,8 @@ int32 encoder1;
 int32 encoder2;
 int8 offset = 0;
 
-// uint32 key1_count;
-// uint32 key2_count;
-// uint32 key3_count;
-// uint32 key4_count;
-// uint8  key1_flag;
-// uint8  key2_flag;
-// uint8  key3_flag;
-// uint8  key4_flag;
-uint32 count_time = 1000;
+
+#define CONTROL_PIT                         (TIM6_PIT )                                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
 
 void all_init(void)
 {
@@ -81,103 +74,37 @@ void all_init(void)
 
 	system_delay_ms(300);
 	menu_init(); // 菜单初始化
-	mt9v03x_init();
-
-	//    while(1)
-	//    {
-	//        if(mt9v03x_init())
-	//        {
-	//            ips200_show_string(0, 16, "mt9v03x reinit.");
-	//        }
-	//        else
-	//        {
-	//            break;
-	//        }
-	//        system_delay_ms(500);                                                   // 短延时快速闪灯表示异常
-	//    }
-	//    ips200_show_string(0, 16, "init success.");
-	//	system_delay_ms(1000);
-	imu_init();
+	mt9v03x_init();//摄像头初始化
+	imu_init();//姿态传感器初始化
 	motor_init();	// 电机初始化
 	encoder_init(); // 编码器初始化
-
+	pit_ms_init(CONTROL_PIT , 2);//开启控制函数定时器
 	ips200_clear();
 
-	pit_ms_init(TIM2_PIT, 1);
-	interrupt_set_priority(TIM2_IRQn, 0); // 按键的中断
 }
 
-// void display(void)
-//{
-////	ips200_show_chinese(0, 100+offset, 16, test_chinese1[0], 14, RGB565_RED);
-////	ips200_show_chinese(0, 116+offset, 16, test_chinese2[0], 14, RGB565_RED);
-//	ips200_show_chinese(0, 132+offset, 16, test_chinese3[0], 7, RGB565_RED);
-//	ips200_show_chinese(0, 148+offset, 16, test_chinese4[0], 7, RGB565_RED);
-//	ips200_show_int(115, 132+offset, encoder1, 3);
-//	ips200_show_int(115, 148+offset, encoder2, 3);
-//	ips200_show_string(0, 164+offset, "E2:");
-//	ips200_show_string(0, 180+offset, "E3:");
-//	ips200_show_string(0, 196+offset, "E4:");
-//	ips200_show_string(0, 212+offset, "E5:");
-//
-//	if(!gpio_get_level(KEY1))
-//	{
-//		key1_flag=1;
-//		key1_count=0;
-//		ips200_show_string(30, 164+offset, "OK");
-//	}
-//	else if(!key1_flag) ips200_show_string(30, 164+offset, "  ");
-//	if(!gpio_get_level(KEY2))
-//	{
-//		key2_flag=1;
-//		key2_count=0;
-//		ips200_show_string(30, 180+offset, "OK");
-//	}
-//	else if(!key2_flag) ips200_show_string(30, 180+offset, "  ");
-//	if(!gpio_get_level(KEY3))
-//	{
-//		key3_flag=1;
-//		key3_count=0;
-//		ips200_show_string(30, 196+offset, "OK");
-//	}
-//	else if(!key3_flag) ips200_show_string(30, 196+offset, "  ");
-//	if(!gpio_get_level(KEY4))
-//	{
-//		key4_flag=1;
-//		key4_count=0;
-//		ips200_show_string(30, 212+offset, "OK");
-//	}
-//	else if(!key4_flag) ips200_show_string(30, 212+offset, "  ");
-//}
+
 
 int main(void)
 {
 	all_init();
-	// clock_init(SYSTEM_CLOCK_120M); // 初始化芯片时钟 工作频率为 120MHz
-	// debug_init();                  // 初始化默认 Debug UART
-
+	
 	while (1)
 	{
-		Load(0, 0);
+		
 		// 运行菜单
 		show_process(NULL);
 		system_delay_ms(20);
 		image_output();
-		// printf("ENCODER_1 counter \t%d .\r\n", encoder_data_1);                 // 输出编码器计数信息
-		// printf("ENCODER_2 counter \t%d .\r\n", encoder_data_2);                 // 输出编码器计数信息
+		//camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
+		 printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
+		 printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
 
 		//		printf("IMU963RA acc data: x=%5d, y=%5d, z=%5d\n", imu963ra_acc_x, imu963ra_acc_y, imu963ra_acc_z);
 		//    printf("IMU963RA gyro data:  x=%5d, y=%5d, z=%5d\n", imu963ra_gyro_x, imu963ra_gyro_y, imu963ra_gyro_z);
-				printf("%2f, %2f, %2f\n", roll, pitch, yaw);
+		//		printf("%2f, %2f, %2f\n", roll, pitch, yaw);
 
-		//		if(mt9v03x_finish_flag)
-		//		{
-		//			memcpy(image_copy, mt9v03x_image, MT9V03X_H*MT9V03X_W);
-		//			ips200_show_gray_image(0, 0, (const uint8 *)image_copy, MT9V03X_W, MT9V03X_H, MT9V03X_W, MT9V03X_H, 0);
-		//			mt9v03x_finish_flag=0;
-		//		}
 
-		// display();
 	}
 }
 

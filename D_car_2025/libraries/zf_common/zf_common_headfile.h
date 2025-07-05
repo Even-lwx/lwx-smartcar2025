@@ -134,6 +134,8 @@
 #include "motor.h"
 #include "encoder.h"
 #include "imu660rb.h"
+#include "imu963ra.h"
+#include "pid.h"
 //===================================================用户自定义文件===================================================
 
 #endif

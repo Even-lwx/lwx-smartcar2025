@@ -10,6 +10,10 @@
 
 
 extern uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]; // 最终输出结果的数组
+extern uint8 boundary_image[IMAGE_HEIGHT][IMAGE_WIDTH];   // 边界图像
+extern uint8 centerline_image[IMAGE_HEIGHT][IMAGE_WIDTH]; // 中心线图像
+extern int center_points[IMAGE_HEIGHT];                   // 存储每行的中心点坐标
+
 void image_output();
 
 

@@ -397,97 +397,13 @@
 
 extern uint8 image_copy[MT9V03X_H][MT9V03X_W];
 uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]; // 最终输出结果的数组
+uint8 boundary_image[IMAGE_HEIGHT][IMAGE_WIDTH];   // 边界图像
+uint8 centerline_image[IMAGE_HEIGHT][IMAGE_WIDTH]; // 中心线图像
+int center_points[IMAGE_HEIGHT];                   // 存储每行的中心点坐标
 
-// 1. 预处理函数 (大津法前)
-//--------------------------------------------------------------
-// 快速中值滤波 (3x3窗口)
-void medianFilter3x3(uint8 input[][IMAGE_WIDTH],
-                     uint8 output[][IMAGE_WIDTH])
-{
-    // 只处理内部像素，边缘保留原值
-    for (int i = 1; i < IMAGE_HEIGHT - 1; i++)
-    {
-        for (int j = 1; j < IMAGE_WIDTH - 1; j++)
-        {
-            // 收集3x3窗口的像素值
-            uint8 window[9];
-            int idx = 0;
-            for (int di = -1; di <= 1; di++)
-            {
-                for (int dj = -1; dj <= 1; dj++)
-                {
-                    window[idx++] = input[i + di][j + dj];
-                }
-            }
 
-            // 使用插入排序找中值 (比完全排序更快)
-            for (int k = 1; k < 9; k++)
-            {
-                uint8 key = window[k];
-                int l = k - 1;
-                while (l >= 0 && window[l] > key)
-                {
-                    window[l + 1] = window[l];
-                    l--;
-                }
-                window[l + 1] = key;
-            }
 
-            output[i][j] = window[4]; // 中值
-        }
-    }
-
-    // 复制边缘像素
-    for (int i = 0; i < IMAGE_HEIGHT; i++)
-    {
-        output[i][0] = input[i][0];
-        output[i][IMAGE_WIDTH - 1] = input[i][IMAGE_WIDTH - 1];
-    }
-    for (int j = 0; j < IMAGE_WIDTH; j++)
-    {
-        output[0][j] = input[0][j];
-        output[IMAGE_HEIGHT - 1][j] = input[IMAGE_HEIGHT - 1][j];
-    }
-}
-
-// 对比度拉伸
-void contrastStretch(uint8 input[][IMAGE_WIDTH],
-                     uint8 output[][IMAGE_WIDTH])
-{
-    // 寻找最小和最大灰度值
-    uint8 min_val = 255;
-    uint8 max_val = 0;
-
-    for (int i = 0; i < IMAGE_HEIGHT; i++)
-    {
-        for (int j = 0; j < IMAGE_WIDTH; j++)
-        {
-            if (input[i][j] < min_val)
-                min_val = input[i][j];
-            if (input[i][j] > max_val)
-                max_val = input[i][j];
-        }
-    }
-
-    // 避免除零错误
-    if (max_val == min_val)
-        max_val = min_val + 1;
-
-    // 应用线性拉伸
-    const uint8 range = max_val - min_val;
-    for (int i = 0; i < IMAGE_HEIGHT; i++)
-    {
-        for (int j = 0; j < IMAGE_WIDTH; j++)
-        {
-            // 使用整数运算优化
-            int32_t value = ((int32_t)(input[i][j] - min_val) * 255) / range;
-            output[i][j] = (value > 255) ? 255 : (value < 0) ? 0
-                                                             : value;
-        }
-    }
-}
-
-// 2. 大津法核心函数 (已优化)
+// 大津法核心函数 (已优化)
 //--------------------------------------------------------------
 int otsuThreshold(uint8 image[][IMAGE_WIDTH])
 {
@@ -513,7 +429,7 @@ int otsuThreshold(uint8 image[][IMAGE_WIDTH])
     }
 
     // 遍历可能的阈值（利用单峰特性提前终止）
-    for (int t = 0; t < 256; t++)
+    for (int t = 0; t < 256; t+=2)//间隔2个计算，提高运行速度
     {
         if (histogram[t] == 0)
             continue;
@@ -555,59 +471,12 @@ int otsuThreshold(uint8 image[][IMAGE_WIDTH])
     return threshold;
 }
 
-// 3. 优化的形态学操作 (腐蚀+膨胀)
-//--------------------------------------------------------------
-void combinedMorphology(uint8 input[][IMAGE_WIDTH],
-                        uint8 output[][IMAGE_WIDTH],
-                        int operation) // 0:开运算, 1:闭运算
-{
-    // 只处理内部像素
-    for (int i = 1; i < IMAGE_HEIGHT - 1; i++)
-    {
-        for (int j = 1; j < IMAGE_WIDTH - 1; j++)
-        {
-            uint8 min_val = 255;
-            uint8 max_val = 0;
 
-            // 计算3x3邻域的最小值和最大值
-            for (int di = -1; di <= 1; di++)
-            {
-                for (int dj = -1; dj <= 1; dj++)
-                {
-                    uint8 val = input[i + di][j + dj];
-                    if (val < min_val)
-                        min_val = val;
-                    if (val > max_val)
-                        max_val = val;
-                }
-            }
 
-            // 根据操作类型选择结果
-            if (operation == 0)
-            {                           // 开运算: 先腐蚀后膨胀
-                output[i][j] = max_val; // 膨胀操作
-            }
-            else
-            {                           // 闭运算: 先膨胀后腐蚀
-                output[i][j] = min_val; // 腐蚀操作
-            }
-        }
-    }
 
-    // 处理边缘像素 (直接复制)
-    for (int i = 0; i < IMAGE_HEIGHT; i++)
-    {
-        output[i][0] = input[i][0];
-        output[i][IMAGE_WIDTH - 1] = input[i][IMAGE_WIDTH - 1];
-    }
-    for (int j = 0; j < IMAGE_WIDTH; j++)
-    {
-        output[0][j] = input[0][j];
-        output[IMAGE_HEIGHT - 1][j] = input[IMAGE_HEIGHT - 1][j];
-    }
-}
 
-// 4. 应用阈值函数
+
+//  应用阈值函数
 //--------------------------------------------------------------
 void applyThreshold(uint8 input[][IMAGE_WIDTH],
                     uint8 output[][IMAGE_WIDTH],
@@ -623,36 +492,87 @@ void applyThreshold(uint8 input[][IMAGE_WIDTH],
     }
 }
 
-// 5. 主处理流程
+
+// 八邻域边界检测与中心线计算函数
+void find_boundaries_and_centerline() {
+    // 初始化图像
+    for (int y = 0; y < IMAGE_HEIGHT; y++) {
+        for (int x = 0; x < IMAGE_WIDTH; x++) {
+            boundary_image[y][x] = 0;
+            centerline_image[y][x] = 0;
+        }
+        center_points[y] = -1; // 初始化为无效值
+    }
+
+    // 定义八邻域相对坐标
+    const int dx[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
+    const int dy[8] = {0, -1, -1, -1, 0, 1, 1, 1};
+
+    // 只处理图像中间区域，避免边界检查
+    for (int y = 1; y < IMAGE_HEIGHT - 1; y++) {
+        int left_boundary = -1;
+        int right_boundary = -1;
+
+        // 寻找左边界
+        for (int x = 1; x < IMAGE_WIDTH - 1; x++) {
+            if (binaryImage[y][x] == 255) {
+                // 检查八邻域中是否有背景点
+                for (int i = 0; i < 8; i++) {
+                    int nx = x + dx[i];
+                    int ny = y + dy[i];
+                    if (binaryImage[ny][nx] == 0) {
+                        left_boundary = x;
+                        boundary_image[y][x] = 255; // 标记为边界
+                        break;
+                    }
+                }
+                if (left_boundary != -1) break;
+            }
+        }
+
+        // 寻找右边界
+        for (int x = IMAGE_WIDTH - 2; x > 0; x--) {
+            if (binaryImage[y][x] == 255) {
+                // 检查八邻域中是否有背景点
+                for (int i = 0; i < 8; i++) {
+                    int nx = x + dx[i];
+                    int ny = y + dy[i];
+                    if (binaryImage[ny][nx] == 0) {
+                        right_boundary = x;
+                        boundary_image[y][x] = 255; // 标记为边界
+                        break;
+                    }
+                }
+                if (right_boundary != -1) break;
+            }
+        }
+
+        // 计算中心线
+        if (left_boundary != -1 && right_boundary != -1) {
+            int center_x = (left_boundary + right_boundary) / 2;
+            center_points[y] = center_x; // 存储中心点
+            
+            // 在中心线图像上标记中心点（±2像素范围内）
+            for (int offset = -2; offset <= 2; offset++) {
+                int cx = center_x + offset;
+                if (cx >= 0 && cx < IMAGE_WIDTH) {
+                    centerline_image[y][cx] = 128; // 灰色标记
+                }
+            }
+        }
+    }
+}
+
+
+//  主处理流程
 //--------------------------------------------------------------
 void image_output()
 {
-    // 内存优化：使用单一临时缓冲区
-    static uint8 tempBuffer[IMAGE_HEIGHT][IMAGE_WIDTH];
-
-// 步骤1: 预处理 (中值滤波) - 可选
-#ifdef ENABLE_PRE_FILTER
-    medianFilter3x3(image_copy, tempBuffer);
-#else
-    memcpy(tempBuffer, image_copy, IMAGE_HEIGHT * IMAGE_WIDTH);
-#endif
-
-// 步骤2: 增强对比度 (可选)
-#ifdef ENABLE_CONTRAST_STRETCH
-    contrastStretch(tempBuffer, tempBuffer);
-#endif
 
     // 步骤3: 计算大津法阈值
-    int threshold = otsuThreshold(tempBuffer);
+    int threshold = otsuThreshold(image_copy);
 
     // 步骤4: 应用阈值二值化
-    applyThreshold(tempBuffer, binaryImage, threshold);
-
-// 步骤5: 后处理降噪 - 可选
-#ifdef ENABLE_POST_DENOISE
-    // 开运算去除小噪声点
-    combinedMorphology(binaryImage, tempBuffer, 0);
-    // 闭运算填充小孔洞
-    combinedMorphology(tempBuffer, binaryImage, 1);
-#endif
+    applyThreshold(image_copy, binaryImage, threshold);
+  find_boundaries_and_centerline();
 }

@@ -11,9 +11,9 @@
 #define ENCODER_2_A                 (TIM4_ENCODER_CH1_B6)
 #define ENCODER_2_B                 (TIM4_ENCODER_CH2_B7)
 
-#define ENCODER_PIT                         (TIM6_PIT )                                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
-extern int16 encoder_data_1;
-extern int16 encoder_data_2;
+
+extern int16 Encoder_Left;
+extern int16 Encoder_Right;
 
 
 void encoder_init();

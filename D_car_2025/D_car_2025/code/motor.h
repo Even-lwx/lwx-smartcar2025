@@ -13,7 +13,7 @@
 
 void motor_init();
 void Load(int motor1,int motor2);
-
-
+void Limit(int* motor1, int* motor2);
+void motor_protect(int* motor1,int* motor2);
 
 #endif

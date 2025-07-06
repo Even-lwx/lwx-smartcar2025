@@ -481,7 +481,7 @@ uint8 imu963ra_init (void)
 //        system_delay_ms(2);                             
 //        imu963ra_write_acc_gyro_register(IMU963RA_MASTER_CONFIG, 0x00);         // 清除复位标志
 //        system_delay_ms(2);
-//        
+        
 //        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL2, 0x80);// 复位连接的外设
 //        system_delay_ms(2);
 //        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL2, 0x00);

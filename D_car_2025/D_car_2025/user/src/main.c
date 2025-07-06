@@ -65,20 +65,22 @@ int32 encoder2;
 int8 offset = 0;
 
 
-#define CONTROL_PIT                         (TIM6_PIT )                                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
-
+#define CONTROL_PIT                         (TIM6_PIT )                                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调de
+#define CONTROL_IRQn                         (TIM6_IRQn )   
 void all_init(void)
 {
 	clock_init(SYSTEM_CLOCK_120M); // 初始化芯片时钟 工作频率为 120MHz
 	debug_init();				   // 初始化默认 Debug UART
 
 	system_delay_ms(300);
+	gpio_init(D7, GPO, GPIO_LOW, GPO_PUSH_PULL);//
 	menu_init(); // 菜单初始化
 	mt9v03x_init();//摄像头初始化
-	imu_init();//姿态传感器初始化
+	imu660rb_init();//姿态传感器初始化
 	motor_init();	// 电机初始化
 	encoder_init(); // 编码器初始化
-	pit_ms_init(CONTROL_PIT , 2);//开启控制函数定时器
+	pit_ms_init(CONTROL_PIT , 5);//开启控制函数定时器
+	interrupt_set_priority(CONTROL_IRQn ,0);
 	ips200_clear();
 
 }
@@ -94,11 +96,18 @@ int main(void)
 		
 		// 运行菜单
 		show_process(NULL);
+		if (mt9v03x_finish_flag)
+    {
+        // 拷贝图像数据
+        memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);
+				image_output();
+				mt9v03x_finish_flag=0;
+    }
 		system_delay_ms(20);
-		image_output();
+		
 		//camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
-		 printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
-		 printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
+		// printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
+		 //printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
 
 		//		printf("IMU963RA acc data: x=%5d, y=%5d, z=%5d\n", imu963ra_acc_x, imu963ra_acc_y, imu963ra_acc_z);
 		//    printf("IMU963RA gyro data:  x=%5d, y=%5d, z=%5d\n", imu963ra_gyro_x, imu963ra_gyro_y, imu963ra_gyro_z);

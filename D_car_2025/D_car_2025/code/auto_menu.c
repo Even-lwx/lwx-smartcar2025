@@ -3078,31 +3078,26 @@ void fun_menu()
 // 图像显示处理
 void handle_image_display()
 {
-    if (mt9v03x_finish_flag)
-    {
-        // 拷贝图像数据
-        memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);
-
+ 
+        
         // 显示原始图像
-        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
-                               MT9V03X_W, MT9V03X_H,
-                               MT9V03X_W, MT9V03X_H, 0);
+//        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
+//                               MT9V03X_W, MT9V03X_H,
+//                               MT9V03X_W, MT9V03X_H, 0);
 
         // 显示处理后的二值化图像
         ips200_show_gray_image(0, 120, (const uint8 *)binaryImage,
                                MT9V03X_W, MT9V03X_H,
                                MT9V03X_W, MT9V03X_H, 0);
-        //				// 显示边界图像
-        //        ips200_show_gray_image(0, 0, (const uint8 *)boundary_image,
-        //                              MT9V03X_W, MT9V03X_H,
-        //                              MT9V03X_W, MT9V03X_H, 0);
-        // camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
-
+        // 显示边界图像
+        ips200_show_gray_image(0, 0, (const uint8 *)boundary_image,
+                                     MT9V03X_W, MT9V03X_H,
+                                     MT9V03X_W, MT9V03X_H, 0);
         // 显示退出提示
         ips200_show_string(10, 240, "Press BACK to exit");
 
-        mt9v03x_finish_flag = 0;
-    }
+       
+    
 
     // 检测返回键
     if (button1)
@@ -3123,11 +3118,15 @@ void handle_sensor_display()
     ips200_show_string(10, 10, "Sensor Parameters");
     ips200_draw_line(10, 30, 230, 30, RGB565_BLUE);
     ips200_show_string(0, 50, "roll:");
-    ips200_show_string(0, 70, "pitch:");
-    ips200_show_string(0, 90, "yaw:");
-    ips200_show_float(60, 50, roll, 4, 4);
-    ips200_show_float(60, 70, pitch, 4, 4);
-    ips200_show_float(60, 90, yaw, 4, 4);
+		//ips200_show_string(0, 70, "pitch:");
+    //ips200_show_string(0, 90, "yaw:");
+		ips200_show_string(0, 70, "Left:");
+    ips200_show_string(0, 90, "Right:");
+		ips200_show_float(90, 50, roll_offset, 4, 4);
+    //ips200_show_float(60, 70, pitch, 4, 4);
+    //ips200_show_float(60, 90, yaw, 4, 4);
+		ips200_show_float(90,70,Encoder_Left,4,4);
+	  ips200_show_float(90,90,Encoder_Right,4,4);
 
     // 显示退出提示
     ips200_show_string(10, 240, "Press BACK to exit");
@@ -3149,7 +3148,7 @@ void handle_launch_program()
     switch (launch_state)
     {
     case 0: // 准备阶段
-        ips200_clear();
+       
         ips200_show_string(10, 10, "Launch Program");
         ips200_draw_line(10, 30, 230, 30, RGB565_RED);
         ips200_show_string(15, 50, "Ready to launch");
@@ -3158,48 +3157,18 @@ void handle_launch_program()
         if (button2)
         {
             launch_state = 1;
-            countdown = 5;
-            counter = 0; // 重置计数器
+						ips200_clear();
+            car_run=1;//发车标志位
         }
         break;
 
-    case 1: // 倒计时阶段
-        ips200_clear();
-        ips200_show_string(10, 10, "Launch Program");
-        ips200_draw_line(10, 30, 230, 30, RGB565_RED);
-
-        char count_str[30];
-        sprintf(count_str, "Launch in: %d", countdown);
-        ips200_show_string(50, 80, count_str);
-
-        // 简单倒计时处理（使用计数器模拟时间）
-        counter++;
-        if (counter >= 100)
-        { // 大约1秒（假设每10ms调用一次）
-            counter = 0;
-            if (countdown > 0)
-            {
-                countdown--;
-            }
-            else
-            {
-                launch_state = 2; // 进入发车状态
-            }
-        }
-        break;
-
-    case 2: // 发车状态
-        ips200_clear();
+    case 1: 
+       
         ips200_show_string(10, 10, "Launch Program");
         ips200_draw_line(10, 30, 230, 30, RGB565_GREEN);
         ips200_show_string(15, 50, "Launching!");
 
-        // 这里添加实际的发车控制代码
-        // 例如：motor_control(100); // 控制电机速度
-
-        // 显示状态信息
-        ips200_show_string(15, 80, "Running...");
-        ips200_show_string(15, 100, "Speed: 100%");
+       
         break;
     }
 
@@ -3209,6 +3178,7 @@ void handle_launch_program()
     // 检测返回键
     if (button1)
     {
+				car_run=0;
         display_mode = 0;  // 退出程序模式
         launch_state = 0;  // 重置状态
         is_clear_flag = 1; // 设置清屏标志
@@ -3218,6 +3188,9 @@ void handle_launch_program()
 
         assist_menu(); // 刷新菜单显示
     }
+
+   
+       
 }
 
 // 显示进程钩子函数

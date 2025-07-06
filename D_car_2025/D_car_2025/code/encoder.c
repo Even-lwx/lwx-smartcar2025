@@ -22,6 +22,6 @@ void pit_encoder_handler(void)
     Encoder_Left = encoder_get_count(ENCODER_1); // 获取编码器计数
     encoder_clear_count(ENCODER_1);              // 清空编码器计数
 
-    Encoder_Right = encoder_get_count(ENCODER_2); // 获取编码器计数
+    Encoder_Right = -encoder_get_count(ENCODER_2); // 获取编码器计数
     encoder_clear_count(ENCODER_2);               // 清空编码器计数
 }

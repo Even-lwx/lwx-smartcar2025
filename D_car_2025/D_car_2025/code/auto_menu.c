@@ -2827,7 +2827,7 @@ void flash_load_parameters()
         }
 
         // 显示加载成功提示
-        showstr(0, (SON_NUM + 1) * DIS_Y, "Params Loaded!");
+        //showstr(0, (SON_NUM + 1) * DIS_Y, "Params Loaded!");
     }
 #endif
 }
@@ -3078,25 +3078,31 @@ void fun_menu()
 // 图像显示处理
 void handle_image_display()
 {
- 
-        
-        // 显示原始图像
+	
+if (mt9v03x_finish_flag)
+    {
+     
+//        // 显示原始图像
 //        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
 //                               MT9V03X_W, MT9V03X_H,
 //                               MT9V03X_W, MT9V03X_H, 0);
 
         // 显示处理后的二值化图像
-        ips200_show_gray_image(0, 120, (const uint8 *)binaryImage,
+        ips200_show_gray_image(0, 0, (const uint8 *)binaryImage,
                                MT9V03X_W, MT9V03X_H,
                                MT9V03X_W, MT9V03X_H, 0);
         // 显示边界图像
-        ips200_show_gray_image(0, 0, (const uint8 *)boundary_image,
+        ips200_show_gray_image(0, 120, (const uint8 *)boundary_image,
                                      MT9V03X_W, MT9V03X_H,
                                      MT9V03X_W, MT9V03X_H, 0);
+				
+				
+			mt9v03x_finish_flag=0;	
+			}
         // 显示退出提示
         ips200_show_string(10, 240, "Press BACK to exit");
 
-       
+			
     
 
     // 检测返回键
@@ -3105,7 +3111,9 @@ void handle_image_display()
         display_mode = 0;  // 退出图像模式
         is_clear_flag = 1; // 设置清屏标志
         assist_menu();     // 刷新菜单显示
+			
     }
+	
 }
 
 // 传感器参数显示处理
@@ -3323,7 +3331,8 @@ void menu_init()
 
     /*---------------字符串索引初始化----------------*/
     index_xy_init();
-
+	
+	
 /*-----------------配置flash---------------*/
 #ifdef USE_FLASH
     flash_init_wz();
@@ -3411,12 +3420,13 @@ void enter_launch_program()
 
 void NULL_FUN()
 {
+	
 }
 
 float test_a = 1.1f;
 float test_b = 100.0f;
 uint16 test_d = 20;
-int aa;
+
 
 void UNIT_SET()
 {
@@ -3424,8 +3434,7 @@ void UNIT_SET()
     unit_param_set(&test_a, TYPE_FLOAT, 0.5, 3, 3, NORMAL_PAR, "test_a");
     unit_param_set(&test_b, TYPE_FLOAT, 2, 6, 3, NORMAL_PAR, "test_b");
     unit_param_set(&test_d, TYPE_UINT16, 1, 6, 0, NORMAL_PAR, "test_d");
-    unit_param_set(&tau, TYPE_FLOAT, 0.5, 3, 3, NORMAL_PAR, "tau");
-    unit_param_set(&aa, TYPE_INT, 0.5, 3, 3, NORMAL_PAR, "u");
+    
 }
 
 void FUN_INIT()

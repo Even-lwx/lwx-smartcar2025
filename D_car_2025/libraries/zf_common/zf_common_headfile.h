@@ -130,10 +130,11 @@
 
 //===================================================用户自定义文件===================================================
 #include "auto_menu.h"
+#include "buzzer.h"
 #include "Image Binarization.h"
 #include "motor.h"
 #include "encoder.h"
-#include "imu660rb.h"
+//#include "imu660rb.h"
 #include "imu963ra.h"
 #include "pid.h"
 //===================================================用户自定义文件===================================================

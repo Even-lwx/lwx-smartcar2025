@@ -436,11 +436,6 @@
               <FilePath>..\code\motor.c</FilePath>
             </File>
             <File>
-              <FileName>imu660rb.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\code\imu660rb.c</FilePath>
-            </File>
-            <File>
               <FileName>pid.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\pid.c</FilePath>
@@ -449,6 +444,11 @@
               <FileName>imu963ra.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\imu963ra.c</FilePath>
+            </File>
+            <File>
+              <FileName>buzzer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\buzzer.c</FilePath>
             </File>
           </Files>
         </Group>

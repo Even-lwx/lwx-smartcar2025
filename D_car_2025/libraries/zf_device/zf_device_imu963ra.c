@@ -476,56 +476,56 @@ uint8 imu963ra_init (void)
         imu963ra_write_acc_gyro_register(IMU963RA_CTRL7_G, 0x00);               // 开启陀螺仪高性能模式 关闭高通滤波
         imu963ra_write_acc_gyro_register(IMU963RA_CTRL9_XL, 0x01);              // 关闭I3C接口
 
-//        imu963ra_write_acc_gyro_register(IMU963RA_FUNC_CFG_ACCESS, 0x40);       // 开启HUB寄存器访问 用于配置地磁计
-//        imu963ra_write_acc_gyro_register(IMU963RA_MASTER_CONFIG, 0x80);         // 复位I2C主机
-//        system_delay_ms(2);                             
-//        imu963ra_write_acc_gyro_register(IMU963RA_MASTER_CONFIG, 0x00);         // 清除复位标志
-//        system_delay_ms(2);
+        imu963ra_write_acc_gyro_register(IMU963RA_FUNC_CFG_ACCESS, 0x40);       // 开启HUB寄存器访问 用于配置地磁计
+        imu963ra_write_acc_gyro_register(IMU963RA_MASTER_CONFIG, 0x80);         // 复位I2C主机
+        system_delay_ms(2);                             
+        imu963ra_write_acc_gyro_register(IMU963RA_MASTER_CONFIG, 0x00);         // 清除复位标志
+        system_delay_ms(2);
         
-//        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL2, 0x80);// 复位连接的外设
-//        system_delay_ms(2);
-//        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL2, 0x00);
-//        system_delay_ms(2);
+        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL2, 0x80);// 复位连接的外设
+        system_delay_ms(2);
+        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL2, 0x00);
+        system_delay_ms(2);
 
-//        if(imu963ra_mag_self_check())
-//        {
-//            zf_log(0, "IMU963RA mag self check error.");
-//            return_state = 1;
-//            break;            
-//        }
+        if(imu963ra_mag_self_check())
+        {
+            zf_log(0, "IMU963RA mag self check error.");
+            return_state = 1;
+            break;            
+        }
 
-//        // IMU963RA_MAG_ADDR 寄存器
-//        // 设置为 0x09 磁力计量程为 2G   获取到的磁力计数据除以 12000   可以转化为带物理单位的数据 单位 G(高斯)
-//        // 设置为 0x19 磁力计量程为 8G   获取到的磁力计数据除以 3000    可以转化为带物理单位的数据 单位 G(高斯)
-//        switch(IMU963RA_MAG_SAMPLE_DEFAULT)
-//        {
-//            default:
-//            {
-//                zf_log(0, "IMU963RA_MAG_SAMPLE_DEFAULT set error.");
-//                return_state = 1;
-//            }break;
-//            case IMU963RA_MAG_SAMPLE_2G:
-//            {
-//                imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL1, 0x09);
-//                imu963ra_transition_factor[2] = 12000;
-//            }break;
-//            case IMU963RA_MAG_SAMPLE_8G:
-//            {
-//                imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL1, 0x19);
-//                imu963ra_transition_factor[2] = 3000;
-//            }break;
-//        }
-//        if(1 == return_state)
-//        {
-//            break;
-//        }
+        // IMU963RA_MAG_ADDR 寄存器
+        // 设置为 0x09 磁力计量程为 2G   获取到的磁力计数据除以 12000   可以转化为带物理单位的数据 单位 G(高斯)
+        // 设置为 0x19 磁力计量程为 8G   获取到的磁力计数据除以 3000    可以转化为带物理单位的数据 单位 G(高斯)
+        switch(IMU963RA_MAG_SAMPLE_DEFAULT)
+        {
+            default:
+            {
+                zf_log(0, "IMU963RA_MAG_SAMPLE_DEFAULT set error.");
+                return_state = 1;
+            }break;
+            case IMU963RA_MAG_SAMPLE_2G:
+            {
+                imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL1, 0x09);
+                imu963ra_transition_factor[2] = 12000;
+            }break;
+            case IMU963RA_MAG_SAMPLE_8G:
+            {
+                imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_CONTROL1, 0x19);
+                imu963ra_transition_factor[2] = 3000;
+            }break;
+        }
+        if(1 == return_state)
+        {
+            break;
+        }
 
-//        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_FBR, 0x01);
-//        imu963ra_connect_mag(IMU963RA_MAG_ADDR, IMU963RA_MAG_OUTX_L);
-//        
-//        imu963ra_write_acc_gyro_register(IMU963RA_FUNC_CFG_ACCESS, 0x00);       // 关闭HUB寄存器访问
+        imu963ra_write_mag_register(IMU963RA_MAG_ADDR, IMU963RA_MAG_FBR, 0x01);
+        imu963ra_connect_mag(IMU963RA_MAG_ADDR, IMU963RA_MAG_OUTX_L);
+        
+        imu963ra_write_acc_gyro_register(IMU963RA_FUNC_CFG_ACCESS, 0x00);       // 关闭HUB寄存器访问
 
-//        system_delay_ms(20);                                                    // 等待磁力计获取数据
+        system_delay_ms(20);                                                    // 等待磁力计获取数据
     }while(0);
     return return_state;
 }

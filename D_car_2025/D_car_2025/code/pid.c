@@ -3,7 +3,7 @@
 #include "pid.h"
 
 
-uint8_t car_run=1; //发车标志位
+uint8_t car_run=0; //发车标志位
 
 
 
@@ -18,8 +18,8 @@ int Vertical_out, Velocity_out,Gyro_Out, Turn_out, Target_Speed = 0, Target_turn
 float Med_Angle = 0; // 平衡时角度值偏移量（机械中值）
 // PID参数
 float Gyro_Kp=0.96,Gyro_Ki=0.004;
-float Vertical_Kp =-53 , Vertical_Kd =-0.071; // 直立环 
-float Velocity_Kp = 0, Velocity_Ki = 0;	// 速度环 
+float Vertical_Kp =-45 , Vertical_Kd =-0; // 直立环 
+float Velocity_Kp = -0, Velocity_Ki = 0;	// 速度环 
 
 
 float Turn_Kp=0, Turn_Kd = 0;					// 转向环
@@ -97,7 +97,7 @@ void Control(void)
 	int PWM_out;
 	// 1、读取传感器的数据
 	pit_encoder_handler();//编码器数据采集
-	first_order_filtering();//仅计算roll值
+	//first_order_filtering();//仅计算roll值
 	
 	if(car_run ==1)
 	{

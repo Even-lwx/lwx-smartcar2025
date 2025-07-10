@@ -4,6 +4,7 @@
 void buzzer_init()
 {
 	gpio_init(D7, GPO, GPIO_LOW, GPO_PUSH_PULL);
+	ips200_show_string(10,120,"buzzer init success");
 }
 
 

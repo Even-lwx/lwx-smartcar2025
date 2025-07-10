@@ -2436,7 +2436,7 @@ static int static_cnt = 0;
 void (*current_operation_menu)(void);
 
 // 添加全局变量用于显示模式
-static uint8_t display_mode = 0; // 0:正常菜单, 1:显示图像, 2:传感器参数, 3:发车程序
+uint8_t display_mode = 0; // 0:正常菜单, 1:显示图像, 2:传感器参数, 3:发车程序
 
 // 传感器数据结构体
 typedef struct
@@ -2827,7 +2827,7 @@ void flash_load_parameters()
         }
 
         // 显示加载成功提示
-        //showstr(0, (SON_NUM + 1) * DIS_Y, "Params Loaded!");
+        showstr(10, 100, "Params Loaded!");
     }
 #endif
 }
@@ -3091,10 +3091,10 @@ if (mt9v03x_finish_flag)
         ips200_show_gray_image(0, 0, (const uint8 *)binaryImage,
                                MT9V03X_W, MT9V03X_H,
                                MT9V03X_W, MT9V03X_H, 0);
-        // 显示边界图像
-        ips200_show_gray_image(0, 120, (const uint8 *)boundary_image,
-                                     MT9V03X_W, MT9V03X_H,
-                                     MT9V03X_W, MT9V03X_H, 0);
+//        // 显示边界图像
+//        ips200_show_gray_image(0, 120, (const uint8 *)boundary_image,
+//                                     MT9V03X_W, MT9V03X_H,
+//                                     MT9V03X_W, MT9V03X_H, 0);
 				
 				
 			mt9v03x_finish_flag=0;	
@@ -3130,12 +3130,13 @@ void handle_sensor_display()
     //ips200_show_string(0, 90, "yaw:");
 		ips200_show_string(0, 70, "Left:");
     ips200_show_string(0, 90, "Right:");
-		ips200_show_float(90, 50, roll_offset, 4, 4);
+		ips200_show_float(90, 50, filtering_angle, 4, 4);
     //ips200_show_float(60, 70, pitch, 4, 4);
     //ips200_show_float(60, 90, yaw, 4, 4);
 		ips200_show_float(90,70,Encoder_Left,4,4);
 	  ips200_show_float(90,90,Encoder_Right,4,4);
-
+	
+		ips200_show_float(90,110,imu963ra_gyro_z,4,4);
     // 显示退出提示
     ips200_show_string(10, 240, "Press BACK to exit");
 

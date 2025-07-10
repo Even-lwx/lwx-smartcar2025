@@ -132,6 +132,7 @@
 #include "auto_menu.h"
 #include "buzzer.h"
 #include "Image Binarization.h"
+#include "edge_extraction.h"
 #include "motor.h"
 #include "encoder.h"
 //#include "imu660rb.h"

@@ -416,24 +416,14 @@
               <FilePath>..\code\auto_menu.c</FilePath>
             </File>
             <File>
-              <FileName>key.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\code\key.c</FilePath>
-            </File>
-            <File>
               <FileName>Image Binarization.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\Image Binarization.c</FilePath>
             </File>
             <File>
-              <FileName>encoder.c</FileName>
+              <FileName>edge_extraction.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\code\encoder.c</FilePath>
-            </File>
-            <File>
-              <FileName>motor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\code\motor.c</FilePath>
+              <FilePath>..\code\edge_extraction.c</FilePath>
             </File>
             <File>
               <FileName>pid.c</FileName>
@@ -449,6 +439,21 @@
               <FileName>buzzer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\buzzer.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\encoder.c</FilePath>
             </File>
           </Files>
         </Group>

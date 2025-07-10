@@ -9,6 +9,7 @@ void encoder_init()
 {
     encoder_quad_init(ENCODER_1, ENCODER_1_A, ENCODER_1_B); // 初始化编码器模块与引脚 正交解码编码器模式
     encoder_quad_init(ENCODER_2, ENCODER_2_A, ENCODER_2_B); // 初始化编码器模块与引脚 正交解码编码器模式
+		ips200_show_string(10,180,"encoder init success");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -19,9 +20,9 @@ void encoder_init()
 //-------------------------------------------------------------------------------------------------------------------
 void pit_encoder_handler(void)
 {
-    Encoder_Left = encoder_get_count(ENCODER_2); // 获取编码器计数
-    encoder_clear_count(ENCODER_2);              // 清空编码器计数
+    Encoder_Left = encoder_get_count(ENCODER_1); // 获取编码器计数
+    encoder_clear_count(ENCODER_1);              // 清空编码器计数
 
-    Encoder_Right = -encoder_get_count(ENCODER_1); // 获取编码器计数
-    encoder_clear_count(ENCODER_1);               // 清空编码器计数
+    Encoder_Right = -encoder_get_count(ENCODER_2); // 获取编码器计数
+    encoder_clear_count(ENCODER_2);               // 清空编码器计数
 }

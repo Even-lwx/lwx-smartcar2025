@@ -134,7 +134,7 @@ typedef struct MENU_UNIT
 
 
 
-
+extern uint8_t display_mode;//显示模式（图像显示、传感器数据显示、发车程序）
 extern void menu_init(void);
 
 void show_process(void *parameter);

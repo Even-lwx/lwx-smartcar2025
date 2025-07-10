@@ -65,6 +65,10 @@
 
 #define CONTROL_PIT                         (TIM7_PIT )                                
 #define CONTROL_IRQn                         (TIM7_IRQn )   
+
+uint32 system_count=0;
+int threshold;
+
 void all_init(void)
 {
 	clock_init(SYSTEM_CLOCK_120M); // 初始化芯片时钟 工作频率为 120MHz
@@ -76,21 +80,23 @@ void all_init(void)
 	buzzer_init();
 	
 	mt9v03x_init();//摄像头初始化
-	//imu_init();//姿态传感器初始化
+	imu_init();//姿态传感器初始化
 	motor_init();	// 电机初始化
 	encoder_init(); // 编码器初始化
 	
-	pit_ms_init(CONTROL_PIT , 5);//开启控制函数定时器
+	pit_ms_init(CONTROL_PIT , 2);//开启控制函数定时器
 	interrupt_set_priority(CONTROL_IRQn ,0);
 	
-
+	ips200_clear();
 //	buzzer_on();
 //	system_delay_ms(100);
 //	buzzer_off();
 //	system_delay_ms(100);
+	pit_ms_init(TIM2_PIT, 10);
+	interrupt_set_priority(TIM2_IRQn, 0); // 菜单的中断
 }
 
-
+uint8 databuff[500];
 
 int main(void)
 {
@@ -98,17 +104,30 @@ int main(void)
 	
 	while (1)
 	{
-			
-			show_process(NULL);
-			system_delay_ms(20);
-		 if (mt9v03x_finish_flag)
-    {
-        // 拷贝图像数据
-        memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);
-				image_output();
-				mt9v03x_finish_flag=0;
-    }
-	system_delay_ms(20);
+//		sprintf(databuff, "%1f\r\n", roll);
+//		wireless_uart_send_string (databuff);
+		/*图像处理*/
+//		if(car_run==1||display_mode==1)//发车模式/图像显示时才处理图像
+//		{
+//			if (mt9v03x_finish_flag)
+//			{
+//					
+//					memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);// 拷贝图像数据
+//					if(system_count%2==0)
+//					{
+//							threshold = otsuThreshold(image_copy);//计算阈值
+//					}
+//					applyThreshold(image_copy, binaryImage, threshold);//应用阈值生成二值化图像
+
+//					Longest_White_Column();
+//					//Show_Boundry();//在二值化图像上叠加左右边界和中线
+//					
+//					system_count++;
+//					mt9v03x_finish_flag=0;
+//			}
+//			system_delay_ms(20);
+//		}
+//		
 	
 		
 		
@@ -116,10 +135,11 @@ int main(void)
 		//camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
 		// printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
 		 //printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
-
-		//		printf("IMU963RA acc data: x=%5d, y=%5d, z=%5d\n", imu963ra_acc_x, imu963ra_acc_y, imu963ra_acc_z);
-		//    printf("IMU963RA gyro data:  x=%5d, y=%5d, z=%5d\n", imu963ra_gyro_x, imu963ra_gyro_y, imu963ra_gyro_z);
-		//		printf("%2f, %2f, %2f\n", roll, pitch, yaw);
+    
+				// printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
+    printf("%2f\r\n",filtering_angle );
+system_delay_ms(10);
+		//printf("%2f\n", roll);
 
 
 	}

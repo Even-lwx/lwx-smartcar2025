@@ -3,7 +3,7 @@
 
 #define PWM_MAX 10000
 #define PWM_MIN -10000
-#define SPEED_PROTECT 9000
+#define SPEED_PROTECT 5000
 #define TURN_PPROTECT 1000
 // 电机的pwm是用的TIM5
 
@@ -22,6 +22,7 @@ void motor_init()
 	gpio_init(DIR_R, GPO, GPIO_HIGH, GPO_PUSH_PULL); // GPIO 初始化为输出 默认上拉输出高
 	pwm_init(PWM_R, 17000, 0);						 // PWM 通道初始化频率 17KHz 占空比初始为 0
 	// 此处编写用户代码 例如外设初始化代码
+	 ips200_show_string(10,160,"motor init success");
 }
 
 

@@ -3078,9 +3078,12 @@ void fun_menu()
 // 图像显示处理
 void handle_image_display()
 {
-	
-if (mt9v03x_finish_flag)
+	ips200_draw_line ( MT9V03X_W/2, 0, MT9V03X_W/2, MT9V03X_H, RGB565_RED);
+
+	ips200_draw_line ( 0, TURN_STANDARD, MT9V03X_W, TURN_STANDARD, RGB565_RED);
+	if (mt9v03x_finish_flag)
     {
+			
      
 //        // 显示原始图像
 //        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
@@ -3091,6 +3094,14 @@ if (mt9v03x_finish_flag)
         ips200_show_gray_image(0, 0, (const uint8 *)binaryImage,
                                MT9V03X_W, MT9V03X_H,
                                MT9V03X_W, MT9V03X_H, 0);
+				for (int i = MT9V03X_H - 1; i >= MT9V03X_H - Search_Stop_Line; i--) // 从最底下往上扫描
+    {
+        // 左右边界使用黄色
+        ips200_draw_point(Left_Line[i] + 1, i, RGB565_YELLOW);
+        ips200_draw_point(Right_Line[i] - 1, i, RGB565_YELLOW);
+        // 中线使用蓝色
+        ips200_draw_point((Left_Line[i] + Right_Line[i]) >> 1, i,RGB565_BLUE);
+    }
 //        // 显示边界图像
 //        ips200_show_gray_image(0, 120, (const uint8 *)boundary_image,
 //                                     MT9V03X_W, MT9V03X_H,
@@ -3424,17 +3435,17 @@ void NULL_FUN()
 	
 }
 
-float test_a = 1.1f;
-float test_b = 100.0f;
-uint16 test_d = 20;
 
-
+extern float Turn_kp1, Turn_kp2 , Turn_kd1, Turn_kd2 ;
+extern float Velocity_Kp;
 void UNIT_SET()
 {
     // 菜单单元调参参数初始化
-    unit_param_set(&test_a, TYPE_FLOAT, 0.5, 3, 3, NORMAL_PAR, "test_a");
-    unit_param_set(&test_b, TYPE_FLOAT, 2, 6, 3, NORMAL_PAR, "test_b");
-    unit_param_set(&test_d, TYPE_UINT16, 1, 6, 0, NORMAL_PAR, "test_d");
+    unit_param_set(&Turn_kp1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp1");
+		unit_param_set(&Turn_kp2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp2");
+		unit_param_set(&Turn_kd1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd1");
+		unit_param_set(&Turn_kd2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd2");
+	unit_param_set(&Velocity_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Speed_Kp");
     
 }
 

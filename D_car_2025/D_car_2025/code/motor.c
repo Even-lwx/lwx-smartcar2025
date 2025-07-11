@@ -3,8 +3,8 @@
 
 #define PWM_MAX 10000
 #define PWM_MIN -10000
-#define SPEED_PROTECT 5000
-#define TURN_PPROTECT 1000
+#define SPEED_PROTECT 100
+#define TURN_PPROTECT 5000
 // 电机的pwm是用的TIM5
 
 
@@ -40,25 +40,22 @@ void Load(int motor1, int motor2)
 	}
 	else
 	{
-gpio_set_level(DIR_L, GPIO_LOW);						 // DIR输出低电平
+		gpio_set_level(DIR_L, GPIO_LOW);						 // DIR输出低电平
 		pwm_set_duty(PWM_L, abs(motor1)); // 计算占空比
 	}
 	if (motor2 < 0)
 	{
 			gpio_set_level(DIR_R, GPIO_LOW);						 // DIR输出低电平
-		pwm_set_duty(PWM_R, abs(motor2)); // 计算占空比
+			pwm_set_duty(PWM_R, abs(motor2)); // 计算占空比
 
 	
 	}
 	else
 	{
 				gpio_set_level(DIR_R, GPIO_HIGH);						 // DIR输出高电平
-		pwm_set_duty(PWM_R, abs(motor2)); // 计算占空比
-
-		
+				pwm_set_duty(PWM_R, abs(motor2)); // 计算占空比
 	}
 
-	system_delay_ms(50);
 }
 
 /**
@@ -87,7 +84,7 @@ void Limit(int* motor1, int* motor2)
 void motor_protect(int* motor1,int* motor2)
 {
 
-	if(abs(*motor1)>SPEED_PROTECT||abs(*motor2)>SPEED_PROTECT||abs(*motor1-*motor2)>TURN_PPROTECT)
+	if(abs(Encoder_Left)>SPEED_PROTECT||abs(Encoder_Right)>SPEED_PROTECT)//||abs(Encoder_Left-Encoder_Right)>TURN_PPROTECT||image_out_of_bounds(binaryImage)
 	{
 			car_run=0;
 			buzzer_on();                                          

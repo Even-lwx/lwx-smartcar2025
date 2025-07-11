@@ -54,7 +54,7 @@ void TIM1_UP_IRQHandler(void)
 //-------------------------------------------------------------------------------------------------------------------
 void TIM2_IRQHandler(void)
 {
-		
+		// 此处编写用户代码
 		show_process(NULL);
 		
     // 此处编写用户代码
@@ -104,7 +104,8 @@ void TIM5_IRQHandler(void)
 void TIM6_IRQHandler(void)
 {
     // 此处编写用户代码
-    
+    extern void Control();
+    Control();
     // 此处编写用户代码
     TIM6->SR &= ~TIM6->SR; // 清空中断状态
 }
@@ -116,8 +117,7 @@ void TIM6_IRQHandler(void)
 void TIM7_IRQHandler(void)
 {
     // 此处编写用户代码
-		extern void Control();
-    Control();
+		
     // 此处编写用户代码
     TIM7->SR &= ~TIM7->SR; // 清空中断状态
 }

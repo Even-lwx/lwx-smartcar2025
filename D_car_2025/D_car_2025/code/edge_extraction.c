@@ -190,7 +190,7 @@ void Show_Boundry(void)
     }
 
     // 在屏幕理论中线处显示红线，用于调整摄像头
-    // ips200_draw_line ( MT9V03X_W/2, MT9V03X_H-10, MT9V03X_W/2, MT9V03X_H, RGB565_RED);
+     
 }
 
 /*-------------------------------------------------------------------------------------------------------------------
@@ -570,11 +570,28 @@ void Cross_Detect()
 }
 
 
-void Img_Disappear_Detect()
+/**
+* @brief   出界判断,选取图像底部中间10*3区域进行判断
+* @param   *binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]  原始图像
+* @retval   0:正常 1:出界
+*/
+uint8 image_out_of_bounds(uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH])
 {
-		
-
-
-
-
+    int sum=0;
+    for(int i=0;i<10;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            sum+=image_copy[IMAGE_HEIGHT-j][IMAGE_WIDTH/2-5+i];
+        }
+    }
+    int average = sum / 30; // 计算平均值
+    if(average<130)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }

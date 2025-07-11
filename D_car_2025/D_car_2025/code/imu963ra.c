@@ -6,18 +6,20 @@ void imu_init(void)
 {
 
     // 初始化IMU传感器
-    while (1)
+   while(1)
     {
-        if (imu963ra_init())
+        if(imu963ra_init())
         {
-            ips200_show_string(10, 140, "IMU init error");
+           ips200_show_string(10,140,"imu init error");                            // IMU963RA 初始化失败
         }
         else
         {
-            ips200_show_string(10, 140, "IMU init success");
+						ips200_show_string(10,140,"imu init success");  
             break;
         }
+                                                  
     }
+		
 }
 
 uint8 gyro_ration = 4;
@@ -40,12 +42,13 @@ void first_order_complementary_filtering(void)
     imu963ra_get_gyro();
 
     // 读取 IMU 数据
-    gx = imu963ra_gyro_x - 5;
-    gy = imu963ra_gyro_y + 9;
-    gz = imu963ra_gyro_z + 8;
+    gx = imu963ra_gyro_x-3 ;
+    gy = imu963ra_gyro_y+12 ;
+    gz = imu963ra_gyro_z+4 ;
     ax = imu963ra_acc_x;
     ay = imu963ra_acc_y;
     az = imu963ra_acc_z;
+		
 
     // 陀螺仪数据处理：去除小值噪声
     if (abs(gx) < 5)
@@ -54,12 +57,16 @@ void first_order_complementary_filtering(void)
         gy = 0;
     if (abs(gz) < 5)
         gz = 0;
+		
     float gyro_temp;
     float acc_temp;
     gyro_temp = gx * gyro_ration;
     acc_temp = (ay - angle_temp) * acc_ration;
     angle_temp += ((gyro_temp + acc_temp) * call_cycle);
-    filtering_angle = angle_temp - 3650;
+    filtering_angle = angle_temp-3900 ;
+
+
+
 }
 
 // #define OFFSET -24

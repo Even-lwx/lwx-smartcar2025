@@ -43,126 +43,83 @@
 // 核心板正常供电即可 无需额外连接
 // 如果使用主板测试 主板必须要用电池供电
 
-// *************************** 例程测试说明 ***************************
-// 1.核心板烧录完成本例程 完成上电
-//
-// 2.可以看到核心板上两个 LED 呈流水灯状闪烁
-//
-// 3.将 SWITCH1 / SWITCH2 两个宏定义对应的引脚分别按照 00 01 10 11 的组合接到 1-VCC 0-GND 或者波动对应主板的拨码开关
-//
-// 3.不同的组合下 两个 LED 流水灯状闪烁的频率会发生变化
-//
-// 4.将 KEY1 / KEY2 / KEY3 / KEY4 两个宏定义对应的引脚接到 1-VCC 0-GND 或者 按对应按键
-//
-// 5.任意引脚接 GND 或者 按键按下会使得两个 LED 一起闪烁 松开后恢复流水灯
-//
-// 如果发现现象与说明严重不符 请参照本文件最下方 例程常见问题说明 进行排查
-
 // **************************** 代码区域 ****************************
 
+#define CONTROL_PIT (TIM6_PIT)
+#define CONTROL_IRQn (TIM6_IRQn)
 
-
-
-#define CONTROL_PIT                         (TIM7_PIT )                                
-#define CONTROL_IRQn                         (TIM7_IRQn )   
-
-uint32 system_count=0;
+uint32 system_count = 0;
 int threshold;
 
 void all_init(void)
 {
 	clock_init(SYSTEM_CLOCK_120M); // 初始化芯片时钟 工作频率为 120MHz
 	debug_init();				   // 初始化默认 Debug UART
-	
+
 	menu_init(); // 菜单初始化
 	system_delay_ms(300);
-	
+
 	buzzer_init();
-	
-	mt9v03x_init();//摄像头初始化
-	imu_init();//姿态传感器初始化
+
+	mt9v03x_init(); // 摄像头初始化
+	imu_init();		// 姿态传感器初始化
 	motor_init();	// 电机初始化
 	encoder_init(); // 编码器初始化
-	
-	pit_ms_init(CONTROL_PIT , 2);//开启控制函数定时器
-	interrupt_set_priority(CONTROL_IRQn ,0);
-	
+
+	pit_ms_init(CONTROL_PIT, 1); // 开启控制函数定时器
+	interrupt_set_priority(CONTROL_IRQn, 0);
+
 	ips200_clear();
 //	buzzer_on();
 //	system_delay_ms(100);
 //	buzzer_off();
 //	system_delay_ms(100);
 	pit_ms_init(TIM2_PIT, 10);
-	interrupt_set_priority(TIM2_IRQn, 0); // 菜单的中断
+	interrupt_set_priority(TIM2_IRQn, 1); // 菜单的中断
+	
 }
-
-uint8 databuff[500];
 
 int main(void)
 {
 	all_init();
-	
+
 	while (1)
 	{
-//		sprintf(databuff, "%1f\r\n", roll);
-//		wireless_uart_send_string (databuff);
-		/*图像处理*/
-//		if(car_run==1||display_mode==1)//发车模式/图像显示时才处理图像
-//		{
-//			if (mt9v03x_finish_flag)
-//			{
-//					
-//					memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W);// 拷贝图像数据
-//					if(system_count%2==0)
-//					{
-//							threshold = otsuThreshold(image_copy);//计算阈值
-//					}
-//					applyThreshold(image_copy, binaryImage, threshold);//应用阈值生成二值化图像
-
-//					Longest_White_Column();
-//					//Show_Boundry();//在二值化图像上叠加左右边界和中线
-//					
-//					system_count++;
-//					mt9v03x_finish_flag=0;
-//			}
-//			system_delay_ms(20);
-//		}
-//		
 	
-		
-		
-		
-		//camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
-		// printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
-		 //printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
-    
-				// printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
-    printf("%2f\r\n",filtering_angle );
-system_delay_ms(10);
-		//printf("%2f\n", roll);
+	//	printf("%d\r\n",gz);	
+//		printf("%d,%d,%.2f\r\n",gx,ay,filtering_angle );
+//		system_delay_ms(20);
 
+		/*图像处理*/
+		if (car_run == 1 || display_mode == 1) // 发车模式/图像显示时才处理图像
+		{
+			if (mt9v03x_finish_flag)
+			{
 
+				memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W); // 拷贝图像数据
+				if (system_count % 3 == 0)
+				{
+					threshold = otsuThreshold(image_copy); // 计算阈值
+				}
+				applyThreshold(image_copy, binaryImage, threshold); // 应用阈值生成二值化图像
+				
+				Longest_White_Column();
+				//Show_Boundry();//在二值化图像上叠加左右边界和中线
+
+				system_count++;
+			
+				mt9v03x_finish_flag = 0;
+			}
+			
+		}
+
+		// camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
+		//  printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
+		// printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
+
+		 //printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
+		 
 	}
 }
 
 // **************************** 代码区域 ****************************
-
-// *************************** 例程常见问题说明 ***************************
-// 遇到问题时请按照以下问题检查列表检查
-//
-// 问题1：LED 不闪烁
-//      如果使用主板测试，主板必须要用电池供电
-//      查看程序是否正常烧录，是否下载报错，确认正常按下复位按键
-//      万用表测量对应 LED 引脚电压是否变化，如果不变化证明程序未运行，如果变化证明 LED 灯珠损坏
-//
-// 问题2：SWITCH1 / SWITCH2 更改组合流水灯频率无变化
-//      如果使用主板测试，主板必须要用电池供电
-//      查看程序是否正常烧录，是否下载报错，确认正常按下复位按键
-//      万用表测量对应 LED 引脚电压是否变化，如果不变化证明程序未运行，如果变化证明 LED 灯珠损坏
-//      万用表检查对应 SWITCH1 / SWITCH2 引脚电压是否正常变化，是否跟接入信号不符，引脚是否接错
-//
-// 问题3：KEY1 / KEY2 / KEY3 / KEY4 接GND或者按键按下无变化
-//      如果使用主板测试，主板必须要用电池供电
-//      查看程序是否正常烧录，是否下载报错，确认正常按下复位按键
-//      万用表测量对应 LED 引脚电压是否变化，如果不变化证明程序未运行，如果变化证明 LED 灯珠损坏
-//      万用表检查对应 KEY1 / KEY2 / KEY3 / KEY4 引脚电压是否正常变化，是否跟接入信号不符，引脚是否接错

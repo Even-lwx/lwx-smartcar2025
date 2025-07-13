@@ -39,7 +39,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
-
+#include "math.h"
 //===================================================芯片 SDK 底层===================================================
 #include "hal_device_registers.h"
 #include "hal_common.h"
@@ -129,10 +129,11 @@
 //===================================================应用组件层===================================================
 
 //===================================================用户自定义文件===================================================
+#include "main.h"
 #include "auto_menu.h"
 #include "buzzer.h"
 #include "Image Binarization.h"
-#include "edge_extraction.h"
+#include "image.h"
 #include "motor.h"
 #include "encoder.h"
 //#include "imu660rb.h"

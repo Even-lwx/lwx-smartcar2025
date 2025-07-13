@@ -1,9 +1,9 @@
 #include "zf_common_headfile.h"
 #include <math.h>
-#include "edge_extraction.h"
+#include "image.h"
 
-#define IMG_BLACK 0X00 // 0x00是黑
-#define IMG_WHITE 0Xff // 0xff为白
+#define IMG_BLACK 0 // 0x00是黑
+#define IMG_WHITE 255 // 0xff为白
 
 // 常用基本变量
 extern const uint8 Image_Flags[][9][8];                // 放在图上的数字标记
@@ -50,8 +50,8 @@ volatile int Ramp_Flag = 0; // 坡道标志
 void Longest_White_Column() // 最长白列巡线
 {
     int i, j;
-    int start_column = 20;                 // 最长白列的搜索起始列
-    int end_column = MT9V03X_W - 20;       // 最长白列的搜索终止列
+    int start_column = 10;                 // 最长白列的搜索起始列
+    int end_column = MT9V03X_W - 10;       // 最长白列的搜索终止列
     int left_border = 0, right_border = 0; // 临时存储赛道位置
     Longest_White_Column_Left[0] = 0;      // 最长白列,[0]是最长白列的长度，[1】是第某列
     Longest_White_Column_Left[1] = 0;      // 最长白列,[0]是最长白列的长度，[1】是第某列
@@ -100,7 +100,7 @@ void Longest_White_Column() // 最长白列巡线
     }
     // 从右到左找右左边最长白列
     Longest_White_Column_Right[0] = 0;           // 【0】是白列长度
-    for (i = end_column; i >= start_column; i--) // 从右往左，注意条件，找到左边最长白列位置就可以停了  这里搜索范围可以优化？？？？
+    for (i = end_column; i >= Longest_White_Column_Left[1]; i--) // 从右往左，注意条件，找到左边最长白列位置就可以停了 
     {
         if (Longest_White_Column_Right[0] < White_Column[i]) // 找最长的那一列
         {
@@ -109,13 +109,14 @@ void Longest_White_Column() // 最长白列巡线
         }
     }
 
-    Search_Stop_Line = Longest_White_Column_Left[0];                // 搜索截止行选取左或者右区别不大，他们两个理论上是一样的
+    Search_Stop_Line = (Longest_White_Column_Left[0] > Longest_White_Column_Right[0]) ? Longest_White_Column_Left[0] : Longest_White_Column_Right[0]; // 非常重要，搜索截止行存储
+
     for (i = MT9V03X_H - 1; i >= MT9V03X_H - Search_Stop_Line; i--) // 常规巡线
     {
         /*找右边界 */
         for (j = Longest_White_Column_Right[1]; j <= MT9V03X_W - 1 - 2; j++)
         {
-            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j + 1] == IMG_BLACK && binaryImage[i][j + 2] == IMG_BLACK) // 白黑黑，找到右边界
+            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j + 1] == IMG_BLACK&& binaryImage[i][j + 2] == IMG_BLACK) // 白黑黑，到右边界 
             {
                 right_border = j;
                 Right_Lost_Flag[i] = 0; // 右丢线数组，丢线置1，不丢线置0
@@ -131,13 +132,13 @@ void Longest_White_Column() // 最长白列巡线
         /*找左边界 */
         for (j = Longest_White_Column_Left[1]; j >= 0 + 2; j--) // 往左边扫描
         {
-            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j - 1] == IMG_BLACK && binaryImage[i][j - 2] == IMG_BLACK) // 黑黑白认为到达左边界
+            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j - 1] == IMG_BLACK&& binaryImage[i][j - 2] == IMG_BLACK) // 白黑黑，到左边界 
             {
                 left_border = j;
                 Left_Lost_Flag[i] = 0; // 左丢线数组，丢线置1，不丢线置0
                 break;
             }
-            else if (j <= 0 + 2)
+            else if (j <= 2)
             {
                 left_border = j;       // 找到头都没找到边，就把屏幕最左右当做边界
                 Left_Lost_Flag[i] = 1; // 左丢线数组，丢线置1，不丢线置0
@@ -190,7 +191,6 @@ void Show_Boundry(void)
     }
 
     // 在屏幕理论中线处显示红线，用于调整摄像头
-     
 }
 
 /*-------------------------------------------------------------------------------------------------------------------
@@ -475,7 +475,6 @@ void Lengthen_Right_Boundry(int start, int end)
         start = t;
     }
 
-
     if (start <= 5) // 因为需要在开始点向上找5个点，对于起始点过于靠上，不能做延长，只能直接连线
     {
         Right_Add_Line(Right_Line[start], start, Right_Line[end], end);
@@ -569,24 +568,54 @@ void Cross_Detect()
     //    ips200_showuint8(100,13,Right_Down_Find);
 }
 
+/**
+ *
+ * @brief  计算某几行的平均误差
+ * @param  start_point
+ * @param  end_point
+ * @retval err 误差值
+ **/
+float err_sum_average(uint8 start_point, uint8 end_point)
+{
+    // 防止参数输入错误
+    if (end_point < start_point)
+    {
+        uint8 t = end_point;
+        end_point = start_point;
+        start_point = t;
+    }
+
+    if (start_point < MT9V03X_H - Search_Stop_Line)
+        start_point = MT9V03X_H - Search_Stop_Line - 1; // 防止起点越界
+    if (end_point < MT9V03X_H - Search_Stop_Line)
+        end_point = MT9V03X_H - Search_Stop_Line - 2; // 防止终点越界
+
+    float err = 0;
+    for (int i = start_point; i < end_point; i++)
+    {
+        err += (MT9V03X_W / 2 - ((Left_Line[i] + Right_Line[i]) >> 1)); // 位操作等效除以2
+    }
+    err = err / (end_point - start_point);
+    return err;
+}
 
 /**
-* @brief   出界判断,选取图像底部中间10*3区域进行判断
-* @param   *binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]  原始图像
-* @retval   0:正常 1:出界
-*/
+ * @brief   出界判断,选取图像底部中间10*3区域进行判断
+ * @param   *binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]  原始图像
+ * @retval   0:正常 1:出界
+ */
 uint8 image_out_of_bounds(uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH])
 {
-    int sum=0;
-    for(int i=0;i<10;i++)
+    int sum = 0;
+    for (int i = 0; i < 10; i++)
     {
-        for(int j=0;j<3;j++)
+        for (int j = 0; j < 3; j++)
         {
-            sum+=image_copy[IMAGE_HEIGHT-j][IMAGE_WIDTH/2-5+i];
+            sum += image_copy[IMAGE_HEIGHT - j][IMAGE_WIDTH / 2 - 5 + i];
         }
     }
     int average = sum / 30; // 计算平均值
-    if(average<130)
+    if (average < 130)
     {
         return 1;
     }

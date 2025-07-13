@@ -6,24 +6,23 @@ void imu_init(void)
 {
 
     // 初始化IMU传感器
-   while(1)
+    while (1)
     {
-        if(imu963ra_init())
+        if (imu963ra_init())
         {
-           ips200_show_string(10,140,"imu init error");                            // IMU963RA 初始化失败
+            ips200_show_string(10, 140, "imu init error"); // IMU963RA 初始化失败
         }
         else
         {
-						ips200_show_string(10,140,"imu init success");  
+            ips200_show_string(10, 140, "imu init success");
             break;
         }
-                                                  
     }
-		
 }
 
-uint8 gyro_ration = 4;
-uint8 acc_ration = 4;
+/*逐飞互补滤波解算*/
+uint8 gyro_ration = 4;     // 角速度置信度
+uint8 acc_ration = 4;      // 加速度置信度
 float filtering_angle = 0; // 解算出的角度
 float angle_temp;          // 角度计算中间变量
 float call_cycle = 0.002f;
@@ -41,14 +40,13 @@ void first_order_complementary_filtering(void)
     imu963ra_get_acc();
     imu963ra_get_gyro();
 
-    // 读取 IMU 数据
-    gx = imu963ra_gyro_x-3 ;
-    gy = imu963ra_gyro_y+12 ;
-    gz = imu963ra_gyro_z+4 ;
+    // 读取 IMU 数据、消除零漂
+    gx = imu963ra_gyro_x + gx_error;
+    gy = imu963ra_gyro_y + gy_error;
+    gz = imu963ra_gyro_z + gz_error;
     ax = imu963ra_acc_x;
     ay = imu963ra_acc_y;
     az = imu963ra_acc_z;
-		
 
     // 陀螺仪数据处理：去除小值噪声
     if (abs(gx) < 5)
@@ -57,18 +55,17 @@ void first_order_complementary_filtering(void)
         gy = 0;
     if (abs(gz) < 5)
         gz = 0;
-		
+
     float gyro_temp;
     float acc_temp;
     gyro_temp = gx * gyro_ration;
     acc_temp = (ay - angle_temp) * acc_ration;
     angle_temp += ((gyro_temp + acc_temp) * call_cycle);
-    filtering_angle = angle_temp-3900 ;
+    filtering_angle = angle_temp + machine_mid;
 
+} /*以下是其他角度解算的方法 */
 
-
-}
-
+/*一阶互补滤波解算*/
 // #define OFFSET -24
 // float roll = 0.0f;   // 横滚角
 // float roll_offset=0.0f;

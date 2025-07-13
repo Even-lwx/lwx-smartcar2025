@@ -34,7 +34,7 @@
  ********************************************************************************************************************/
 
 #include "zf_common_headfile.h"
-
+#include "main.h"
 // 打开新的工程或者工程移动了位置务必执行以下操作
 // 第一步 关闭上面所有打开的文件
 // 第二步 project->clean  等待下方进度条走完
@@ -50,6 +50,7 @@
 
 uint32 system_count = 0;
 int threshold;
+int image_proess=0;//图像处理完成标志位
 
 void all_init(void)
 {
@@ -70,13 +71,12 @@ void all_init(void)
 	interrupt_set_priority(CONTROL_IRQn, 0);
 
 	ips200_clear();
-//	buzzer_on();
-//	system_delay_ms(100);
-//	buzzer_off();
-//	system_delay_ms(100);
+	buzzer_on();
+	system_delay_ms(100);
+	buzzer_off();
+	system_delay_ms(100);
 	pit_ms_init(TIM2_PIT, 10);
 	interrupt_set_priority(TIM2_IRQn, 1); // 菜单的中断
-	
 }
 
 int main(void)
@@ -85,40 +85,37 @@ int main(void)
 
 	while (1)
 	{
-	
-	//	printf("%d\r\n",gz);	
-//		printf("%d,%d,%.2f\r\n",gx,ay,filtering_angle );
-//		system_delay_ms(20);
+
+			
 
 		/*图像处理*/
-		if (car_run == 1 || display_mode == 1) // 发车模式/图像显示时才处理图像
+		if (mt9v03x_finish_flag)
 		{
-			if (mt9v03x_finish_flag)
+
+			memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W); // 拷贝图像数据
+			if (system_count % 4 == 0)								  // 间隔4次算一次阈值
 			{
-
-				memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W); // 拷贝图像数据
-				if (system_count % 3 == 0)
-				{
-					threshold = otsuThreshold(image_copy); // 计算阈值
-				}
-				applyThreshold(image_copy, binaryImage, threshold); // 应用阈值生成二值化图像
-				
-				Longest_White_Column();
-				//Show_Boundry();//在二值化图像上叠加左右边界和中线
-
-				system_count++;
-			
-				mt9v03x_finish_flag = 0;
+				threshold = otsu_get_threshold(image_copy, MT9V03X_W, MT9V03X_H); // 图像获取阈值
 			}
-			
+			applyThreshold(image_copy, binaryImage, threshold); // 应用阈值生成二值化图像
+
+			Longest_White_Column();
+			Cross_Detect();
+			turn_offset = err_sum_average(TURN_STANDARD_START, TURN_STANDARD_END); // 转向偏差（左正右负）
+			system_count++;
+			image_proess =1;
+			mt9v03x_finish_flag = 0;
 		}
 
-		// camera_send_image(DEBUG_UART_INDEX, (const uint8 *)mt9v03x_image, MT9V03X_IMAGE_SIZE);
+		/*debug区域*/
 		//  printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
 		// printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
 
-		 //printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
-		 
+		// printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
+		;
+		//	printf("%d,%d,%.2f\r\n",gx,ay,filtering_angle );
+		//printf("%2f\r\n",filtering_angle);
+		//		system_delay_ms(20);
 	}
 }
 

@@ -401,6 +401,11 @@
           <GroupName>user_h</GroupName>
           <Files>
             <File>
+              <FileName>main.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\inc\main.h</FilePath>
+            </File>
+            <File>
               <FileName>isr.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\inc\isr.h</FilePath>
@@ -419,11 +424,6 @@
               <FileName>Image Binarization.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\Image Binarization.c</FilePath>
-            </File>
-            <File>
-              <FileName>edge_extraction.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\code\edge_extraction.c</FilePath>
             </File>
             <File>
               <FileName>pid.c</FileName>
@@ -454,6 +454,11 @@
               <FileName>encoder.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\encoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>image.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\image.c</FilePath>
             </File>
           </Files>
         </Group>

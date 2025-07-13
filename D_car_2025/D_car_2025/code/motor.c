@@ -84,7 +84,7 @@ void Limit(int* motor1, int* motor2)
 void motor_protect(int* motor1,int* motor2)
 {
 
-	if(abs(Encoder_Left)>SPEED_PROTECT||abs(Encoder_Right)>SPEED_PROTECT)//||abs(Encoder_Left-Encoder_Right)>TURN_PPROTECT||image_out_of_bounds(binaryImage)
+	if(abs(Encoder_Left)>SPEED_PROTECT||abs(Encoder_Right)>SPEED_PROTECT||image_out_of_bounds(binaryImage))//||abs(Encoder_Left-Encoder_Right)>TURN_PPROTECT
 	{
 			car_run=0;
 			buzzer_on();                                          

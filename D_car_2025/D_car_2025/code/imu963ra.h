@@ -3,7 +3,10 @@
 
 #include "zf_common_typedef.h"
 #define IMU_PIT                         (TIM7_PIT )                                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
-
+#define gx_error -3
+#define gy_error 12
+#define gz_error 14
+#define machine_mid -3900//机械中值
 extern float roll,roll_offset,yaw;
 extern float filtering_angle;
 

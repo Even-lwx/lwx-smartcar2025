@@ -5,7 +5,7 @@
 
 
 extern uint8_t car_run; 
-
+extern int turn_offset;
 
 void Control(void);
 

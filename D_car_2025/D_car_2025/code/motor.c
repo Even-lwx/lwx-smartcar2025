@@ -94,6 +94,11 @@ void motor_protect(int* motor1,int* motor2)
 			Load(0,0);
 
 	}
+	if(Zebra_Detect())
+	{
+		car_run=0;
+		Load(0,0);
+	}
 
 }
 

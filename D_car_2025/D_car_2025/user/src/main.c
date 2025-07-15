@@ -89,11 +89,8 @@ int main(void)
 			
 
 		/*图像处理*/
-		if (mt9v03x_finish_flag)
-		{
-
 			memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W); // 拷贝图像数据
-			if (system_count % 4 == 0)								  // 间隔4次算一次阈值
+			if (system_count % 3 == 0)								  // 间隔3次算一次阈值
 			{
 				threshold = otsu_get_threshold(image_copy, MT9V03X_W, MT9V03X_H); // 图像获取阈值
 			}
@@ -101,18 +98,19 @@ int main(void)
 
 			Longest_White_Column();
 			Cross_Detect();
+			//Island_Detect();
 			turn_offset = err_sum_average(TURN_STANDARD_START, TURN_STANDARD_END); // 转向偏差（左正右负）
 			system_count++;
 			image_proess =1;
-			mt9v03x_finish_flag = 0;
-		}
+		
+		
 
 		/*debug区域*/
 		//  printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
 		// printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
 
-		// printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
-		;
+		 printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
+	//	printf("%d\r\n",gz);
 		//	printf("%d,%d,%.2f\r\n",gx,ay,filtering_angle );
 		//printf("%2f\r\n",filtering_angle);
 		//		system_delay_ms(20);

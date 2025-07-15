@@ -23,8 +23,12 @@ void imu_init(void)
 /*逐飞互补滤波解算*/
 uint8 gyro_ration = 4;     // 角速度置信度
 uint8 acc_ration = 4;      // 加速度置信度
-float filtering_angle = 0; // 解算出的角度
-float angle_temp;          // 角度计算中间变量
+float filtering_angle = 0; // 解算出的roll角度
+float angle_roll_temp;          // 角度计算中间变量
+
+float angle_yaw_temp = 0.0f;
+float yaw=0;
+
 float call_cycle = 0.002f;
 
 int16_t gx;
@@ -59,11 +63,23 @@ void first_order_complementary_filtering(void)
     float gyro_temp;
     float acc_temp;
     gyro_temp = gx * gyro_ration;
-    acc_temp = (ay - angle_temp) * acc_ration;
-    angle_temp += ((gyro_temp + acc_temp) * call_cycle);
-    filtering_angle = angle_temp + machine_mid;
+    acc_temp = (ay - angle_roll_temp) * acc_ration;
+    angle_roll_temp += ((gyro_temp + acc_temp) * call_cycle);
+    filtering_angle = angle_roll_temp + machine_mid;
+		
+	
+//    gyro_temp = gz * gyro_ration;
+//    acc_temp = (az - angle_yaw_temp) * acc_ration;
+//    angle_yaw_temp += ((gyro_temp + acc_temp) * call_cycle);
+//    yaw = angle_yaw_temp ;
+}
 
-} /*以下是其他角度解算的方法 */
+
+
+
+
+
+/*以下是其他角度解算的方法 */
 
 /*一阶互补滤波解算*/
 // #define OFFSET -24

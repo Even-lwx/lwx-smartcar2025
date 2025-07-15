@@ -14,7 +14,7 @@ int center_points[IMAGE_HEIGHT];                   // 存储每行的中心点坐标
  * @param  row 图像高度
  * @retval 阈值
  */
-int otsu_get_threshold(uint8 *image, uint16 col, uint16 row)
+int otsu_get_threshold(uint8* image, uint16 col, uint16 row)
 {
 #define GrayScale 256
     uint16 width = col;

@@ -1,8 +1,7 @@
 #include "zf_common_headfile.h"
-#include <math.h>
 #include "image.h"
 
-#define IMG_BLACK 0 // 0x00是黑
+#define IMG_BLACK 0   // 0x00是黑
 #define IMG_WHITE 255 // 0xff为白
 
 // 常用基本变量
@@ -25,6 +24,8 @@ int Left_Lost_Flag[MT9V03X_H];     // 左丢线数组，丢线置1，没丢线置0
 int Right_Lost_Flag[MT9V03X_H];    // 右丢线数组，丢线置1，没丢线置0
 
 /*特殊元素 */
+// 斑马线
+volatile int Zebra_Stripes_Flag = 0; // 斑马线
 // 十字
 volatile int Cross_Flag = 0;
 volatile int Left_Down_Find = 0; // 十字使用，找到被置行数，没找到就是0
@@ -32,10 +33,9 @@ volatile int Left_Up_Find = 0;   // 四个拐点标志
 volatile int Right_Down_Find = 0;
 volatile int Right_Up_Find = 0;
 
-// 环岛
-volatile int Island_State;      // 环岛状态标志
-volatile int Left_Island_Flag;  // 左右环岛标志
-volatile int Right_Island_Flag; // 左右环岛标志
+// 环岛变量
+extern volatile int Island_State; // 环岛状态标志
+extern volatile int Ramp_Flag;    // 坡道
 
 // 坡道
 volatile int Ramp_Flag = 0; // 坡道标志
@@ -50,8 +50,8 @@ volatile int Ramp_Flag = 0; // 坡道标志
 void Longest_White_Column() // 最长白列巡线
 {
     int i, j;
-    int start_column = 10;                 // 最长白列的搜索起始列
-    int end_column = MT9V03X_W - 10;       // 最长白列的搜索终止列
+    int start_column = 20;                 // 最长白列的搜索起始列
+    int end_column = MT9V03X_W - 20;       // 最长白列的搜索终止列
     int left_border = 0, right_border = 0; // 临时存储赛道位置
     Longest_White_Column_Left[0] = 0;      // 最长白列,[0]是最长白列的长度，[1】是第某列
     Longest_White_Column_Left[1] = 0;      // 最长白列,[0]是最长白列的长度，[1】是第某列
@@ -99,8 +99,8 @@ void Longest_White_Column() // 最长白列巡线
         }
     }
     // 从右到左找右左边最长白列
-    Longest_White_Column_Right[0] = 0;           // 【0】是白列长度
-    for (i = end_column; i >= Longest_White_Column_Left[1]; i--) // 从右往左，注意条件，找到左边最长白列位置就可以停了 
+    Longest_White_Column_Right[0] = 0;                           // 【0】是白列长度
+    for (i = end_column; i >= Longest_White_Column_Left[1]; i--) // 从右往左，注意条件，找到左边最长白列位置就可以停了
     {
         if (Longest_White_Column_Right[0] < White_Column[i]) // 找最长的那一列
         {
@@ -116,7 +116,7 @@ void Longest_White_Column() // 最长白列巡线
         /*找右边界 */
         for (j = Longest_White_Column_Right[1]; j <= MT9V03X_W - 1 - 2; j++)
         {
-            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j + 1] == IMG_BLACK&& binaryImage[i][j + 2] == IMG_BLACK) // 白黑黑，到右边界 
+            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j + 1] == IMG_BLACK && binaryImage[i][j + 2] == IMG_BLACK) // 白黑黑，到右边界
             {
                 right_border = j;
                 Right_Lost_Flag[i] = 0; // 右丢线数组，丢线置1，不丢线置0
@@ -132,7 +132,7 @@ void Longest_White_Column() // 最长白列巡线
         /*找左边界 */
         for (j = Longest_White_Column_Left[1]; j >= 0 + 2; j--) // 往左边扫描
         {
-            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j - 1] == IMG_BLACK&& binaryImage[i][j - 2] == IMG_BLACK) // 白黑黑，到左边界 
+            if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j - 1] == IMG_BLACK && binaryImage[i][j - 2] == IMG_BLACK) // 白黑黑，到左边界
             {
                 left_border = j;
                 Left_Lost_Flag[i] = 0; // 左丢线数组，丢线置1，不丢线置0
@@ -504,11 +504,12 @@ void Lengthen_Right_Boundry(int start, int end)
   Sample     Cross_Detect(void);
   @note      利用四个拐点判别函数，查找四个角点，根据找到拐点的个数决定是否补线
 -------------------------------------------------------------------------------------------------------------------*/
+
 void Cross_Detect()
 {
     int down_search_start = 0; // 下点搜索开始行
     Cross_Flag = 0;
-    if (Island_State == 0 && Ramp_Flag == 0) // 与环岛互斥开
+    if (Island_State == 0 && Ramp_Flag == 0) // 与环岛、坡道互斥开
     {
         Left_Up_Find = 0;
         Right_Up_Find = 0;
@@ -566,6 +567,143 @@ void Cross_Detect()
     //    ips200_showuint8(100,12,Right_Up_Find);
     //    ips200_showuint8(50,13,Left_Down_Find);
     //    ips200_showuint8(100,13,Right_Down_Find);
+}
+
+/*-------------------------------------------------------------------------------------------------------------------
+  @brief     画线
+  @param     输入起始点，终点坐标，补一条宽度为2的黑线
+  @return    null
+  Sample     Draw_Line(0, 0,MT9V03X_W-1,MT9V03X_H-1);
+             Draw_Line(MT9V03X_W-1, 0,0,MT9V03X_H-1);
+                                    画一个大×
+  @note     补的就是一条线，需要重新扫线
+-------------------------------------------------------------------------------------------------------------------*/
+void Draw_Line(int startX, int startY, int endX, int endY)
+{
+    int i, x, y;
+    int start = 0, end = 0;
+    if (startX >= MT9V03X_W - 1) // 限幅处理
+        startX = MT9V03X_W - 1;
+    else if (startX <= 0)
+        startX = 0;
+    if (startY >= MT9V03X_H - 1)
+        startY = MT9V03X_H - 1;
+    else if (startY <= 0)
+        startY = 0;
+    if (endX >= MT9V03X_W - 1)
+        endX = MT9V03X_W - 1;
+    else if (endX <= 0)
+        endX = 0;
+    if (endY >= MT9V03X_H - 1)
+        endY = MT9V03X_H - 1;
+    else if (endY <= 0)
+        endY = 0;
+
+    if (startX == endX) // 一条竖线
+    {
+        if (startY > endY) // 互换
+        {
+            start = endY;
+            end = startY;
+        }
+        for (i = start; i <= end; i++)
+        {
+            if (i <= 1)
+                i = 1;
+            binaryImage[i][startX] = IMG_BLACK;
+            binaryImage[i - 1][startX] = IMG_BLACK;
+        }
+    }
+
+    else if (startY == endY) // 补一条横线
+    {
+        if (startX > endX) // 互换
+        {
+            start = endX;
+            end = startX;
+        }
+        for (i = start; i <= end; i++)
+        {
+            if (startY <= 1)
+                startY = 1;
+            binaryImage[startY][i] = IMG_BLACK;
+            binaryImage[startY - 1][i] = IMG_BLACK;
+        }
+    }
+    else // 上面两个是水平，竖直特殊情况，下面是常见情况
+    {
+        if (startY > endY) // 起始点矫正
+        {
+            start = endY;
+            end = startY;
+        }
+        else
+        {
+            start = startY;
+            end = endY;
+        }
+        for (i = start; i <= end; i++) // 纵向补线，保证每一行都有黑点
+        {
+            x = (int)(startX + (endX - startX) * (i - startY) / (endY - startY)); // 两点式变形
+            if (x >= MT9V03X_W - 1)
+                x = MT9V03X_W - 1;
+            else if (x <= 1)
+                x = 1;
+            binaryImage[i][x] = IMG_BLACK;
+            binaryImage[i][x - 1] = IMG_BLACK;
+        }
+        if (startX > endX)
+        {
+            start = endX;
+            end = startX;
+        }
+        else
+        {
+            start = startX;
+            end = endX;
+        }
+        for (i = start; i <= end; i++) // 横向补线，保证每一列都有黑点
+        {
+
+            y = (int)(startY + (endY - startY) * (i - startX) / (endX - startX)); // 两点式变形
+            if (y >= MT9V03X_H - 1)
+                y = MT9V03X_H - 1;
+            else if (y <= 0)
+                y = 0;
+            binaryImage[y][i] = IMG_BLACK;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------------------------------
+  @brief     斑马线判断
+  @param     null
+  @return    检测到斑马线返回1，否则返回0
+  Sample     Zebra_Detect();
+  @note
+-------------------------------------------------------------------------------------------------------------------*/
+int Zebra_Detect(void)
+{
+    uint8 zebra_count = 0;
+    if (Longest_White_Column_Left[1] > 20 && Longest_White_Column_Left[1] < IMAGE_WIDTH - 20 &&
+        Longest_White_Column_Right[1] > 20 && Longest_White_Column_Right[1] < IMAGE_WIDTH - 20 &&
+        Search_Stop_Line >= 110)//增加条件限制，减少循环次数
+        for (int i = IMAGE_HEIGHT - 1; i >= IMAGE_HEIGHT - 3; i--)
+        {
+            for (int j = 20; j <= IMAGE_WIDTH - 1 - 20; j++)//检测范围在左右20列之间
+            {
+                if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j + 1] == IMG_BLACK && binaryImage[i][j + 2] == IMG_BLACK)
+                {
+                    zebra_count++;
+                }
+            }
+            if (zebra_count >= 10) // 如果黑色计数大于等于10，认为是斑马线
+            {
+                return 1;
+            }
+        }
+        
+    return 0;
 }
 
 /**

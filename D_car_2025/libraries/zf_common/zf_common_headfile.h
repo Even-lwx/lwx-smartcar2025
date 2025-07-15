@@ -134,6 +134,7 @@
 #include "buzzer.h"
 #include "Image Binarization.h"
 #include "image.h"
+#include "island.h"
 #include "motor.h"
 #include "encoder.h"
 //#include "imu660rb.h"

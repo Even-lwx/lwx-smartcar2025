@@ -426,6 +426,11 @@
               <FilePath>..\code\Image Binarization.c</FilePath>
             </File>
             <File>
+              <FileName>image.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\image.c</FilePath>
+            </File>
+            <File>
               <FileName>pid.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\pid.c</FilePath>
@@ -456,9 +461,9 @@
               <FilePath>..\code\encoder.c</FilePath>
             </File>
             <File>
-              <FileName>image.c</FileName>
+              <FileName>island.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\code\image.c</FilePath>
+              <FilePath>..\code\island.c</FilePath>
             </File>
           </Files>
         </Group>

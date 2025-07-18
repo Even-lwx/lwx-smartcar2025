@@ -1,364 +1,361 @@
 #include "zf_common_headfile.h"
 #include "island.h"
 
+// ³£ÓÃ»ù±¾±äÁ¿
+extern uint8 image_two_value[MT9V03X_H][MT9V03X_W]; // ¶þÖµ»¯ºóµÄÔ­Êý×é
+extern volatile int Left_Line[MT9V03X_H];           // ×ó±ßÏßÊý×é
+extern volatile int Right_Line[MT9V03X_H];          // ÓÒ±ßÏßÊý×é
+extern volatile int Search_Stop_Line;               // ËÑË÷½ØÖ¹ÐÐ
+extern volatile int Boundry_Start_Left;             // ×óÓÒ±ß½çÆðÊ¼µã
+extern volatile int Boundry_Start_Right;            // µÚÒ»¸ö·Ç¶ªÏßµã,³£¹æ±ß½çÆðÊ¼µã
+extern volatile int Left_Lost_Time;                 // ±ß½ç¶ªÏßÊý
+extern volatile int Right_Lost_Time;
+extern volatile int Both_Lost_Time; // Á½±ßÍ¬Ê±¶ªÏßÊý
+extern volatile float Err;          // ÉãÏñÍ·Îó²î
 
-#include "zf_common_headfile.h"
-#include "Island.h"
+// Ê®×Ö±äÁ¿
+extern volatile int Cross_Flag;
 
+// »·µº±äÁ¿
+volatile int Island_State = 0;      // »·µº×´Ì¬±êÖ¾
+volatile int Left_Island_Flag = 0;  // ×óÓÒ»·µº±êÖ¾
+volatile int Right_Island_Flag = 0; // ×óÓÒ»·µº±êÖ¾
+volatile int Left_Up_Guai[2];       // ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
+volatile int Right_Up_Guai[2];      // ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
 
-
-//³£ÓÃ»ù±¾±äÁ¿
-extern uint8 image_two_value[MT9V03X_H][MT9V03X_W];//¶þÖµ»¯ºóµÄÔ­Êý×é
-extern volatile int Left_Line[MT9V03X_H]; //×ó±ßÏßÊý×é
-extern volatile int Right_Line[MT9V03X_H];//ÓÒ±ßÏßÊý×é
-extern volatile int Search_Stop_Line;     //ËÑË÷½ØÖ¹ÐÐ
-extern volatile int Boundry_Start_Left;   //×óÓÒ±ß½çÆðÊ¼µã
-extern volatile int Boundry_Start_Right;  //µÚÒ»¸ö·Ç¶ªÏßµã,³£¹æ±ß½çÆðÊ¼µã
-extern volatile int Left_Lost_Time;       //±ß½ç¶ªÏßÊý
-extern volatile int Right_Lost_Time; 
-extern volatile int Both_Lost_Time;//Á½±ßÍ¬Ê±¶ªÏßÊý
-extern volatile float Err;//ÉãÏñÍ·Îó²î
-
-//Ê®×Ö±äÁ¿
-extern volatile int Cross_Flag; 
-
-//»·µº±äÁ¿
-volatile int Island_State=0;     //»·µº×´Ì¬±êÖ¾
-volatile int Left_Island_Flag=0; //×óÓÒ»·µº±êÖ¾
-volatile int Right_Island_Flag=0;//×óÓÒ»·µº±êÖ¾
-volatile int Left_Up_Guai[2];    //ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
-volatile int Right_Up_Guai[2];   //ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
-
-//°ßÂíÏß
+// °ßÂíÏß
 extern volatile int Zebra_State;
 
-//ÆÂµÀ±êÖ¾Î»
-extern volatile int Ramp_Flag;//ÆÂµÀ±êÖ¾
+// ÆÂµÀ±êÖ¾Î»
+extern volatile int Ramp_Flag; // ÆÂµÀ±êÖ¾
+
+///*-------------------------------------------------------------------------------------------------------------------
+//  @brief     »·µº¼ì²â
+//  @param     null
+//  @return    null
+//  Sample     Island_Detect(void);
+//  @note      ¸ù¾ÝÍøÉÏµÄ¿ªÔ´´úÂëÐÞ¸ÄµÄ
+//-------------------------------------------------------------------------------------------------------------------*/
+//void Island_Detect()
+//{
+//    static float k = 0;                      // 3ºÍ5×´Ì¬µÄk
+//    static int island_state_5_down[2] = {0}; // ×´Ì¬5Ê±¼´½«Àë¿ª»·µº£¬×óÓÒ±ß½ç±ß×îµÍµã£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
+//    static int island_state_3_up[2] = {0};   // ×´Ì¬3Ê±¼´½«½øÈë»·µºÓÃ£¬×óÓÒÉÏÃæ½Çµã[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
+//    static int left_down_guai[2] = {0};      // ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
+//    static int right_down_guai[2] = {0};     // ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
+//    int monotonicity_change_line[2];         // µ¥µ÷ÐÔ¸Ä±äµã×ø±ê£¬[0]´çÄ³ÐÐ£¬[1]´çÄ³ÁÐ
+//    int monotonicity_change_left_flag = 0;   // ²»×ªÕÛÊÇ0
+//    int monotonicity_change_right_flag = 0;  // ²»×ªÕÛÊÇ0
+//    int continuity_change_right_flag = 0;    // Á¬ÐøÊÇ0
+//    int continuity_change_left_flag = 0;     // Á¬ÐøÊÇ0
+
+//    if (Cross_Flag == 0 && Island_State == 0 && Ramp_Flag == 0) //&&Ramp_Flag==0
+//    {
+//        continuity_change_left_flag = Continuity_Change_Left(MT9V03X_H - 1 - 15, 15); // Á¬ÐøÐÔÅÐ¶Ï
+//        continuity_change_right_flag = Continuity_Change_Right(MT9V03X_H - 1 - 15, 15);
+
+//        monotonicity_change_left_flag = Monotonicity_Change_Left(MT9V03X_H - 1 - 15, 15);
+//			  monotonicity_change_right_flag = Monotonicity_Change_Right(MT9V03X_H - 1 - 15, 15);
+
+//        if (Left_Island_Flag == 0) // ×ó»·
+//        {
+//            if (
+//								monotonicity_change_right_flag == 0 &&                                      // ÓÒ±ßÊÇµ¥µ÷µÄ
+//                continuity_change_left_flag != 0 &&                                         // ×ó±ßÊÇ²»Á¬ÐøµÄ
+//                continuity_change_right_flag == 0 &&                                        // ×ó»·µºÓÒ±ßÊÇÁ¬ÐøµÄ
+//               Left_Lost_Time >= 10 &&                                                     // ×ó±ß¶ªÏßºÜ¶à
+//               Left_Lost_Time <= 100 &&                                                    // Ò²²»ÄÜÈ«¶ªÁË
+//                Right_Lost_Time <= 10 &&                                                    // ÓÒ±ß¶ªÏß½ÏÉÙ
+//                Search_Stop_Line >= 100 &&                                                  // ËÑË÷½ØÖ¹ÐÐ¿´µ½ºÜÔ¶
+//                Boundry_Start_Left >= MT9V03X_H - 8 && Boundry_Start_Right >= MT9V03X_H - 8 // ±ß½çÆðÊ¼µã¿¿ÏÂ
+//                )                                                                           // Ë«±ß¶ªÏßÉÙ
+//            {
+//               
+//                    Island_State = 1;
+//                    Left_Island_Flag = 1;
+//                }
+//                else // ÎóÅÐ£¬¹éÁã
+//                {
+//                    Island_State = 0;
+//                    Left_Island_Flag = 0;
+//                }
+//            }
+//        }
+//        if (Right_Island_Flag == 0) // ÓÒ»·
+//        {
+//            if (
+//								monotonicity_change_right_flag == 1 &&
+//                continuity_change_left_flag <=30 &&                                         // ÓÒ»·µº×ó±ßÊÇÁ¬ÐøµÄ
+//                continuity_change_right_flag != 0 &&                                        // ÓÒ±ßÊÇ²»Á¬ÐøµÄ
+//                Right_Lost_Time >= 10 &&                                                    // ÓÒ¶ªÏß¶à
+//                Right_Lost_Time <= 100 &&                                                   // ÓÒ¶ªÏß²»ÄÜÌ«¶à
+//               Left_Lost_Time <= 10 &&                                                     // ×ó¶ªÏßÉÙ
+//                Search_Stop_Line >= 100 &&                                                  // ËÑË÷½ØÖ¹ÐÐ¿´µ½ºÜÔ¶
+//                Boundry_Start_Left >= MT9V03X_H - 10 && Boundry_Start_Right >= MT9V03X_H - 10 // ±ß½çÆðÊ¼µã¿¿ÏÂ
+//            )
+//            {
+//								buzzer_on(60);
+//                Island_State = 1;
+//                Right_Island_Flag = 1;
+//            }
+//            else
+//            {
+
+//                Island_State = 0;
+//                Right_Island_Flag = 0;
+//            }
+//        }
+//    
+
+//		
+//		
+//		
+//		
+//		
+//		
+//    if (Left_Island_Flag == 1) // 1×´Ì¬ÏÂ¹Õµã»¹ÔÚ£¬Ã»¶ªÏß
+//    {
+//        if (Island_State == 1)
+//        {
+//            monotonicity_change_line[0] = Monotonicity_Change_Left(30, 5); // Ñ°ÕÒµ¥µ÷ÐÔ¸Ä±äµã
+//            monotonicity_change_line[1] = Left_Line[monotonicity_change_line[0]];
+//            Left_Add_Line((int)(monotonicity_change_line[1] * 0.15), MT9V03X_H - 1, monotonicity_change_line[1], monotonicity_change_line[0]);
+//            if ((Island_State == 1) && (Boundry_Start_Left < 30)) // ÏÂ·½µ±¶ªÏßÊ±ºò½ø2
+//            {
+
+//                Island_State = 2;
+//            }
+//        }
+
+//        else if (Island_State == 2) // ÏÂ·½½ÇµãÏûÊ§£¬2×´Ì¬Ê±ÏÂ·½Ó¦¸ÃÊÇ¶ªÏß£¬ÉÏÃæÊÇ»¡Ïß
+//        {
+//            monotonicity_change_line[0] = Monotonicity_Change_Left(70, 10); // Ñ°ÕÒµ¥µ÷ÐÔ¸Ä±äµã
+//            monotonicity_change_line[1] = Left_Line[monotonicity_change_line[0]];
+//            Left_Add_Line((int)(monotonicity_change_line[1] * 0.1), MT9V03X_H - 1, monotonicity_change_line[1], monotonicity_change_line[0]);
+//            if (Island_State == 2 && (Boundry_Start_Left >= MT9V03X_H - 5 || monotonicity_change_line[0] > 50)) // µ±Ô²»¡¿¿ÏÂÊ±ºò£¬½ø3
+//            {
+
+//                Island_State = 3; // ×î³¤°×ÁÐÑ°ÕÒ·¶Î§Ò²Òª¸Ä£¬¼ûcamera.c
+//                Left_Island_Flag = 1;
+//            }
+//        }
+//        else if (Island_State == 3) // 3×´Ì¬×¼±¸½ø»·£¬Ñ°ÕÒÉÏ¹Õµã£¬Á¬Ïß
+//        {
+//            if (k != 0)
+//            {
+//                K_Draw_Line(k, MT9V03X_W - 30, MT9V03X_H - 1, 0); // kÊÇ¸Õ¸ÕËã³öÀ´µÄ£¬¾²Ì¬±äÁ¿´æ×Å
+//                Longest_White_Column();                           // Ë¢ÐÂ±ß½çÊý¾Ý
+//            }
+//            else
+//            {
+//                Left_Up_Guai[0] = Find_Left_Up_Point(40, 5); // ÕÒ×óÉÏ¹Õµã
+//                Left_Up_Guai[1] = Left_Line[Left_Up_Guai[0]];
+
+//                if (Left_Up_Guai[0] < 5) // ´Ë´¦ÎªÁË·ÀÖ¹ÎóÅÐ£¬Èç¹û¾­³£´Ó3×´Ì¬¹éÁã£¬½¨ÒéÐÞ¸Ä´Ë´¦ÅÐ¶ÏÌõ¼þ
+//                {
+//                    Island_State = 0;
+//                    Left_Island_Flag = 0;
+//                }
+
+//                if (k == 0 && (15 <= Left_Up_Guai[0] && Left_Up_Guai[0] < 50) && (50 < Left_Up_Guai[1] && Left_Up_Guai[1] < 110)) // ¹Õµã³öÏÖÔÚÒ»¶¨·¶Î§ÄÚ£¬ÈÏÎªÊÇ¹Õµã³öÏÖ
+//                {
+//                    island_state_3_up[0] = Left_Up_Guai[0];
+//                    island_state_3_up[1] = Left_Up_Guai[1];
+//                    k = (float)((float)(MT9V03X_H - island_state_3_up[0]) / (float)(MT9V03X_W - 20 - island_state_3_up[1]));
+//                    K_Draw_Line(k, MT9V03X_W - 30, MT9V03X_H - 1, 0); // ¼ÇÂ¼ÏÂµÚÒ»´ÎÉÏµã³öÏÖÊ±Î»ÖÃ£¬Õë¶ÔÕâ¸ö»·µºÀ­Ò»ÌõËÀÏß£¬Èë»·
+//                    Longest_White_Column();                           // Ë¢ÐÂ±ß½çÊý¾Ý
+//                }
+//            }
+//            if ((Island_State == 3) && (abs(gz) >= 60)) // ´¿¿¿ÍÓÂÝÒÇ»ý·ÖÈë»·
+//            {
+//                k = 0;                  // Ð±ÂÊÇåÁã
+//                Island_State = 4;       // ÕâÒ»²½Ê±ºòË³±ãµ÷ÕûÁË×î³¤°×ÁÐµÄËÑË÷·¶Î§
+//                Longest_White_Column(); // ×î³¤°×ÁÐ
+//            }
+//        }
+//        else if (Island_State == 4) // ×´Ì¬4ÒÑ¾­ÔÚÀïÃæ
+//        {
+//            if (abs(gz) > 200) // »ý·Ö200¶ÈÒÔºóÔÚ´ò¿ª³ö»·ÅÐ¶Ï
+//            {
+//                monotonicity_change_line[0] = Monotonicity_Change_Right(MT9V03X_H - 10, 10); // µ¥µ÷ÐÔ¸Ä±ä
+//                monotonicity_change_line[1] = Right_Line[monotonicity_change_line[0]];
+//                if ((Island_State == 4) && (35 <= monotonicity_change_line[0] && monotonicity_change_line[0] <= 55 && monotonicity_change_line[1] >= 10)) // µ¥µ÷µã¿¿ÏÂ£¬½øÈ¥5
+//                {                                                                                                                                         // monotonicity_change_line[1]>=90&&
+//                    island_state_5_down[0] = MT9V03X_H - 1;
+//                    island_state_5_down[1] = Right_Line[MT9V03X_H - 1];
+//                    k = (float)((float)(MT9V03X_H - monotonicity_change_line[0]) / (float)(island_state_5_down[1] - monotonicity_change_line[1]));
+//                    K_Add_Boundry_Right(k, island_state_5_down[1], island_state_5_down[0], 0); // ºÍ×´Ì¬3Ò»Ñù£¬¼Ç×¡Ð±ÂÊ
+//                    Island_State = 5;
+//                }
+//            }
+//        }
+//        else if (Island_State == 5) // ³ö»·
+//        {
+//            K_Add_Boundry_Right(k, island_state_5_down[1], island_state_5_down[0], 0);
+//            if ((Island_State == 5) && (Boundry_Start_Right < MT9V03X_H - 20)) // ÓÒ±ßÏÈ¶ªÏß
+//            {
+//                Island_State = 6;
+//            }
+//        }
+//        else if (Island_State == 6) // »¹ÔÚ³ö
+//        {
+//            K_Add_Boundry_Right(k, island_state_5_down[1], island_state_5_down[0], 0);
+//            if ((Island_State == 6) && ((Boundry_Start_Right > MT9V03X_H - 10) || (abs(gz) >= 320))) // ÓÒ±ß²»¶ªÏß
+//            {                                                                                        //
+//                k = 0;
+//                Island_State = 7;
+//            }
+//        }
+//        else if (Island_State == 7) // »ù±¾³öÈ¥ÁË£¬ÔÚÑ°ÕÒ¹Õµã£¬×¼±¸Àë¿ª»·µº×´Ì¬
+//        {
+//            Left_Up_Guai[0] = Find_Left_Up_Point(MT9V03X_H - 10, 0); // »ñÈ¡×óÉÏµã×ø±ê£¬×ø±êµãºÏÀíÈ¥8
+//            Left_Up_Guai[1] = Left_Line[Left_Up_Guai[0]];
+//            if ((Island_State == 7) && (Left_Up_Guai[1] <= 100) && (5 <= Left_Up_Guai[0] && Left_Up_Guai[0] <= MT9V03X_H - 20)) // ×¢ÒâÕâÀï£¬¶Ôºá×Ý×ø±ê¶¼ÓÐÒªÇó
+//            {
+//                Island_State = 8; // »ù±¾ÉÏÕÒµ½¹Õµã¾ÍÈ¥8
+//            }
+//        }
+//        else if (Island_State == 8) // Á¬Ïß£¬³ö»·×îºóÒ»²½
+//        {
+//            Left_Up_Guai[0] = Find_Left_Up_Point(MT9V03X_H - 1, 10); // »ñÈ¡×óÉÏµã×ø±ê
+//            Left_Up_Guai[1] = Left_Line[Left_Up_Guai[0]];
+//            Lengthen_Left_Boundry(Left_Up_Guai[0] - 1, MT9V03X_H - 1);
+//            if ((Island_State == 8) && (Left_Up_Guai[0] >= MT9V03X_H - 20 || (Left_Up_Guai[0] < 10 && Boundry_Start_Left >= MT9V03X_H - 10))) // µ±¹Õµã¿¿ÏÂÊ±ºò£¬ÈÏÎª³ö»·ÁË£¬»·µº½áÊø
+//            {                                                                                                                                 // ÒªÃ´¹Õµã¿¿ÏÂ£¬ÒªÃ´¹Õµã¶ªÁË£¬ÇÐÏÂ·½²»¶ªÏß£¬ÈÏÎª»·µº½áÊøÁË
+//                gz = 0;                                                                                                                       // Êý¾ÝÇåÁã
+//                Island_State = 9;                                                                                                             // 8Ê±ºò»·µº»ù±¾½áÊøÁË£¬ÎªÁË·ÀÖ¹Á¬ÐøÅÐ»·£¬8ºó»á½ø9£¬´ó¸Å¼¸Ê®ºÁÃëºó¹éÁã£¬
+//                Left_Island_Flag = 0;
+//            }
+//        }
+//    }
+//		
+//		
+//		
+//		
+//		
+//		
+//    else if (Right_Island_Flag == 1)
+//    {
+//        if (Island_State == 1) // 1×´Ì¬ÏÂ¹Õµã»¹ÔÚ£¬Ã»¶ªÏß
+//        {
+//            monotonicity_change_line[0] = Monotonicity_Change_Right(MT9V03X_H - 1 - 15, 15); // µ¥µ÷ÐÔ¸Ä±ä
+//            monotonicity_change_line[1] = Right_Line[monotonicity_change_line[0]];
+//						
+//            Right_Add_Line((int)(MT9V03X_W - 1 - (monotonicity_change_line[1] * 0.15)), MT9V03X_H - 1, monotonicity_change_line[1], monotonicity_change_line[0]); // ÓÒ±ß²¹³ö¿ÚÎ»ÖÃµÄÏß
+//           
+//            if (monotonicity_change_line[0] > 50)                                                                                                                 // ÓÒÏÂ½ÇÏÈ¶ªÏß
+//            { 
+//							 
+//                Island_State = 2;
+//            }
+//        }
+
+//        else if (Island_State == 2) // ÏÂÃæÒÑ¾­³öÏÖ´ó»¡Ïß£¬ÇÒÉÏ·½³öÏÖ½Çµã
+//        {
+//	
+//            if (k != 0) // ½«½ÇµãÓëÏÂ·½Á¬½Ó£¬»­Ò»ÌõËÀÏß
+//            {
+//								buzzer_on(50);
+//                K_Draw_Line(k, 30, MT9V03X_H - 1, 0);
+//                Longest_White_Column(); // Ë¢ÐÂ×î³¤°×ÁÐ
+//            }
+//            else
+//            {
+//                Right_Up_Guai[0] = Find_Right_Up_Point(MT9V03X_H - 1 - 15, 15); // ÕÒÓÒÉÏ¹Õµã
+//                Right_Up_Guai[1] = Right_Line[Right_Up_Guai[0]];
+
+//              
+
+//                if (k == 0 && (15 <= Right_Up_Guai[0] && Right_Up_Guai[0] < MT9V03X_H - 1 - 15) && (70 < Right_Up_Guai[1] && Right_Up_Guai[1] < 150)) // ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄ½Çµã£¬Á¬Ïß
+//                {
+//                    island_state_3_up[0] = Right_Up_Guai[0];
+//                    island_state_3_up[1] = Right_Up_Guai[1];
+//                    k = (float)((float)(MT9V03X_H - island_state_3_up[0]) / (float)(20 - island_state_3_up[1]));
+//                    K_Draw_Line(k, 30, MT9V03X_H - 1, 0);
+//										system_lastcount=system_count;
+//                    Longest_White_Column(); // Ë¢ÐÂÈüµÀÊý¾Ý
+//                }
+//            }
+//					
+//            if ((Island_State == 2) &&k!=0&&	system_count-system_lastcount>100) 
+//            {
+//                k = 0; // Ð±ÂÊÇåÁã
+//                Island_State = 3;
+//                Longest_White_Column(); // ×î³¤°×ÁÐ
+//            } // ¼ÇµÃÈ¥×î³¤°×ÁÐÄÇ±ß¸ÄÒ»ÏÂ£¬Çø·ÖÏÂ×óÓÒ»·µº
+//        }
+//        else if (Island_State == 3) // 4×´Ì¬ÍêÈ«½øÈ¥»·µºÁË
+//        {
+//            if (gz > 200) // »·µº»ý·Ö200¶ÈºóÔÙ´ò¿ªµ¥µ÷×ªÕÛÅÐ¶Ï
+//            {
+//                monotonicity_change_line[0] = Monotonicity_Change_Left(90, 10); // µ¥µ÷ÐÔ¸Ä±ä
+//                monotonicity_change_line[1] = Left_Line[monotonicity_change_line[0]];
+//                if ((Island_State == 4) && (35 <= monotonicity_change_line[0] && monotonicity_change_line[0] <= 55 && monotonicity_change_line[1] < MT9V03X_W - 10)) // µ¥µ÷µã¿¿ÏÂ£¬½øÈ¥5
+//                {                                                                                                                                                    // monotonicity_change_line[1]<=120&&
+//                    island_state_5_down[0] = MT9V03X_H - 1;
+//                    island_state_5_down[1] = Left_Line[MT9V03X_H - 1] - 5; // ×¥×¡µÚÒ»´Î³öÏÖµÄÐ±ÂÊ£¬¶¨ËÀ
+//                    k = (float)((float)(MT9V03X_H - monotonicity_change_line[0]) / (float)(island_state_5_down[1] - monotonicity_change_line[1]));
+//                    K_Add_Boundry_Left(k, island_state_5_down[1], island_state_5_down[0], 0);
+//                    Island_State = 5;
+//                }
+//            }
+//        }
+//        else if (Island_State == 5) // ×¼±¸³ö»·µº
+//        {
+//            K_Add_Boundry_Left(k, island_state_5_down[1], island_state_5_down[0], 0);
+//            if (Island_State == 5 && Boundry_Start_Left < MT9V03X_H - 20) // ×ó±ßÏÈ¶ªÏß
+//            {
+//                Island_State = 6;
+//            }
+//        }
+//        else if (Island_State == 6) // ¼ÌÐø³ö
+//        {
+//            K_Add_Boundry_Left(k, island_state_5_down[1], island_state_5_down[0], 0);
+//            if ((Island_State == 6) && (Boundry_Start_Left > MT9V03X_H - 10 || abs(gz) >= 320)) // ×ó±ßÏÈ¶ªÏß
+//            {                                                                                   //
+//                k = 0;
+//                Island_State = 7;
+//            }
+//        }
+//        else if (Island_State == 7) // »ù±¾³ö»·µº£¬ÕÒ½Çµã
+//        {
+//            Right_Up_Guai[0] = Find_Right_Up_Point(MT9V03X_H - 10, 0); // »ñÈ¡×óÉÏµã×ø±ê£¬ÕÒµ½ÁËÈ¥8
+//            Right_Up_Guai[1] = Right_Line[Right_Up_Guai[0]];
+//            if ((Island_State == 7) && ((Right_Up_Guai[1] >= MT9V03X_W - 88 && (5 <= Right_Up_Guai[0] && Right_Up_Guai[0] <= MT9V03X_H - 20)))) // ×¢ÒâÕâÀï£¬¶Ôºá×Ý×ø±ê¶¼ÓÐÒªÇó£¬ÒòÎªÈüµÀ²»Ò»Ñù£¬»áÒâÍâ³öÏÖ¹Õµã
+//            {                                                                                                                                   // µ±½ÇµãÎ»ÖÃºÏÀíÊ±£¬½ø8
+//                Island_State = 8;
+//            }
+//        }
+//        else if (Island_State == 8) // »·µº8
+//        {
+//            Right_Up_Guai[0] = Find_Right_Up_Point(MT9V03X_H - 1, 10); // »ñÈ¡ÓÒÉÏµã×ø±ê
+//            Right_Up_Guai[1] = Right_Line[Right_Up_Guai[0]];
+//            Lengthen_Right_Boundry(Right_Up_Guai[0] - 1, MT9V03X_H - 1);
+//            if ((Island_State == 8) && (Right_Up_Guai[0] >= MT9V03X_H - 20 || (Right_Up_Guai[0] < 10 && Boundry_Start_Left >= MT9V03X_H - 10))) // µ±¹Õµã¿¿ÏÂÊ±ºò£¬ÈÏÎª³ö»·ÁË£¬»·µº½áÊø
+//            {                                                                                                                                   // ½Çµã¿¿ÏÂ£¬»òÕßÏÂ¶Ë²»¶ªÏß£¬ÈÏÎª³ö»·ÁË
+//                gz = 0;
+//                Island_State = 9;
+//                Right_Island_Flag = 0;
+//            }
+//        }
+//    }
+
+//    //    if(Err>=0)
+//    //    {
+//    //       Flag_Show_101(MT9V03X_W,image_two_value,(uint8)(uint8)Err/10);//ÉÏÃæÄÇ¸öÊý×Ö
+//    //       Flag_Show_102(MT9V03X_W,image_two_value,(uint8)((uint8)Err%10));//ÏÂÃæµÄÊý×Ö
+//    //    }
+//    //    else
+//    //    {
+//    //        Flag_Show_101(MT9V03X_W,image_two_value,(uint8)(uint8)-Err/10);//ÉÏÃæÄÇ¸öÊý×Ö
+//    //        Flag_Show_102(MT9V03X_W,image_two_value,(uint8)((uint8)-Err%10));//ÏÂÃæµÄÊý×Ö
+//    //    }
+
+//    //    ips200_showfloat(0,12,gz,3,3);
+//    //    ips200_showuint16(0,11,Island_State);
+//}
 
 
-/*-------------------------------------------------------------------------------------------------------------------
-  @brief     »·µº¼ì²â
-  @param     null
-  @return    null
-  Sample     Island_Detect(void);
-  @note      ÀûÓÃËÄ¸ö¹ÕµãÅÐ±ðº¯Êý£¬µ¥µ÷ÐÔ¸Ä±äº¯£¬Á¬ÐøÐÔÊýËºÁÑµã£¬·ÖÎª8²½
--------------------------------------------------------------------------------------------------------------------*/
-void Island_Detect()
-{ 
-    static float k=0;                          //3ºÍ5×´Ì¬µÄk
-    static int island_state_5_down[2]={0};     //×´Ì¬5Ê±¼´½«Àë¿ª»·µº£¬×óÓÒ±ß½ç±ß×îµÍµã£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
-    static int island_state_3_up[2]={0};       //×´Ì¬3Ê±¼´½«½øÈë»·µºÓÃ£¬×óÓÒÉÏÃæ½Çµã[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
-    static int left_down_guai[2]={0};          //ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
-    static int right_down_guai[2]={0};         //ËÄ¸ö¹ÕµãµÄ×ø±ê´æ´¢£¬[0]´æy£¬µÚÄ³ÐÐ£¬{1}´æx£¬µÚÄ³ÁÐ
-    int monotonicity_change_line[2];           //µ¥µ÷ÐÔ¸Ä±äµã×ø±ê£¬[0]´çÄ³ÐÐ£¬[1]´çÄ³ÁÐ
-    int monotonicity_change_left_flag=0;       //²»×ªÕÛÊÇ0
-    int monotonicity_change_right_flag=0;      //²»×ªÕÛÊÇ0
-    int continuity_change_right_flag=0;        //Á¬ÐøÊÇ0
-    int continuity_change_left_flag=0;         //Á¬ÐøÊÇ0
-
-    //½ö±£Áôµ¥µ÷ÐÔ±ä»¯ÅÐ¶Ï
-    monotonicity_change_right_flag=Monotonicity_Change_Right(MT9V03X_H-1-10,10);
-    monotonicity_change_left_flag=Monotonicity_Change_Left(MT9V03X_H-1-10,10);
-
-    if(Cross_Flag==0&&Island_State==0&&Ramp_Flag==0)
-    {
-        if(Left_Island_Flag==0)  //×ó»·ÅÐ¶Ï£º»ùÓÚ×ó±ß½çµ¥µ÷ÐÔ±ä»¯
-        {
-            //ºËÐÄ£º×ó±ß½ç³öÏÖµ¥µ÷ÐÔ±ä»¯£¬ÇÒ¼ì²âµ½×óÏÂ¹Õµã
-            if(monotonicity_change_left_flag!=0)  //×ó±ß½çµ¥µ÷ÐÔ¸Ä±ä
-            {
-                left_down_guai[0]=Find_Left_Down_Point(MT9V03X_H-1,20);  //ÕÒ×óÏÂ½Çµã
-                if(left_down_guai[0]>=30)  //¹ÕµãÎ»ÖÃÓÐÐ§
-                {
-                    Island_State=1;
-                    Left_Island_Flag=1;
-                }
-                else  //ÎóÅÐ£¬¹éÁã
-                {
-                    Island_State=0;
-                    Left_Island_Flag=0;
-                }
-            }
-        }
-
-        if(Right_Island_Flag==0)  //ÓÒ»·ÅÐ¶Ï£º»ùÓÚÓÒ±ß½çµ¥µ÷ÐÔ±ä»¯
-        {
-            //ºËÐÄ£ºÓÒ±ß½ç³öÏÖµ¥µ÷ÐÔ±ä»¯£¬ÇÒ¼ì²âµ½ÓÒÏÂ¹Õµã
-            if(monotonicity_change_right_flag!=0)  //ÓÒ±ß½çµ¥µ÷ÐÔ¸Ä±ä
-            {
-                right_down_guai[0]=Find_Right_Down_Point(MT9V03X_H-1,20);  //ÓÒÏÂµã
-                if(right_down_guai[0]>=30)  //¹ÕµãÎ»ÖÃÓÐÐ§
-                {
-                    buzzer_on();
-                    system_delay_ms(100);
-                    buzzer_off();
-                    system_delay_ms(100);
-                    Island_State=1;
-                    Right_Island_Flag=1;
-                }
-                else
-                {
-                    Island_State=0;
-                    Right_Island_Flag=0;
-                }
-            }
-        }
-    }
-
-    if(Left_Island_Flag==1)  //×ó»·µº×´Ì¬»úÁ÷×ª
-    {
-        if(Island_State==1)
-        {
-            //»ùÓÚ×ó±ß½çµ¥µ÷ÐÔ±ä»¯µãÁ¬Ïß
-            monotonicity_change_line[0]=Monotonicity_Change_Left(30,5);  //»ñÈ¡×ó±ß½çµ¥µ÷ÐÔ¸Ä±äµã
-            monotonicity_change_line[1]=Left_Line[monotonicity_change_line[0]];
-            Left_Add_Line((int)(monotonicity_change_line[1]*0.15),MT9V03X_H-1,monotonicity_change_line[1],monotonicity_change_line[0]);
-            
-            if((Island_State==1)&&(Boundry_Start_Left<30))  //ÏÂ·½¶ªÏß×ª×´Ì¬2
-            {
-                Island_State=2;
-            }
-        }
-
-        else if(Island_State==2)
-        {
-            monotonicity_change_line[0]=Monotonicity_Change_Left(70,10);  //×ó±ß½çµ¥µ÷ÐÔ¸Ä±äµã
-            monotonicity_change_line[1]=Left_Line[monotonicity_change_line[0]];
-            Left_Add_Line((int)(monotonicity_change_line[1]*0.1),MT9V03X_H-1,monotonicity_change_line[1],monotonicity_change_line[0]);
-            
-            if(Island_State==2&&(Boundry_Start_Left>=MT9V03X_H-5||monotonicity_change_line[0]>50))
-            {
-                Island_State=3;
-                Left_Island_Flag=1;
-            }
-        }
-
-        else if(Island_State==3)  //×¼±¸½ø»·£ºÒÀÀµ×ó±ß½ç¹ÕµãÓëµ¥µ÷ÐÔ
-        {
-            if(k!=0)
-            {
-                K_Draw_Line(k,MT9V03X_W-30,MT9V03X_H-1,0);
-                Longest_White_Column();
-            }
-            else
-            {
-                Left_Up_Guai[0]=Find_Left_Up_Point(40,5);  //×óÉÏ»·µã
-                Left_Up_Guai[1]=Left_Line[Left_Up_Guai[0]];
-
-                if (Left_Up_Guai[0]<5)  //·ÀÎóÅÐ
-                {
-                    Island_State=0;
-                    Left_Island_Flag=0;
-                }
-
-                if(k==0&&(15<=Left_Up_Guai[0]&&Left_Up_Guai[0]<50)&&(50<Left_Up_Guai[1]&&Left_Up_Guai[1]<110))
-                {
-                    island_state_3_up[0]= Left_Up_Guai[0];
-                    island_state_3_up[1]= Left_Up_Guai[1];
-                    k=(float)((float)(MT9V03X_H-island_state_3_up[0])/(float)(MT9V03X_W-20-island_state_3_up[1]));
-                    K_Draw_Line(k,MT9V03X_W-30,MT9V03X_H-1,0);
-                    Longest_White_Column();
-                }
-            }
-
-            if((Island_State==3)&&(abs(gz)>=60))
-            {
-                k=0;
-                Island_State=4;
-                Longest_White_Column();
-            }
-        }
-
-        else if(Island_State==4)  //ÒÑ½ø»·£º¼à²âÓÒ±ß½çµ¥µ÷ÐÔ±ä»¯
-        {
-            if(abs(gz)>200)
-            {
-                monotonicity_change_line[0]=Monotonicity_Change_Right(MT9V03X_H-10,10);  //ÓÒ±ß½çµ¥µ÷ÐÔ¸Ä±äµã
-                monotonicity_change_line[1]=Right_Line[monotonicity_change_line[0]];
-                
-                if((Island_State==4)&&(35<=monotonicity_change_line[0]&&monotonicity_change_line[0]<=55&&monotonicity_change_line[1]>=10))
-                {
-                    island_state_5_down[0]=MT9V03X_H-1;
-                    island_state_5_down[1]=Right_Line[MT9V03X_H-1];
-                    k=(float)((float)(MT9V03X_H-monotonicity_change_line[0])/(float)(island_state_5_down[1]-monotonicity_change_line[1]));
-                    K_Add_Boundry_Right(k,island_state_5_down[1],island_state_5_down[0],0);
-                    Island_State=5;
-                }
-            }
-        }
-
-        else if(Island_State==5)  //³ö»·
-        {
-            K_Add_Boundry_Right(k,island_state_5_down[1],island_state_5_down[0],0);
-            
-            if((Island_State==5)&&(Boundry_Start_Right<MT9V03X_H-20))
-            {
-                Island_State=6;
-            }
-        }
-
-        else if(Island_State==6)  //¼ÌÐø³ö»·
-        {
-            K_Add_Boundry_Right(k,island_state_5_down[1],island_state_5_down[0],0);
-            
-            if((Island_State==6)&&((Boundry_Start_Right>MT9V03X_H-10)||(abs(gz)>=320)))
-            {
-                k=0;
-                Island_State=7;
-            }
-        }
-
-        else if(Island_State==7)  //ÕÒ×ó¹Õµã£¨»ùÓÚ×ó±ß½çÌØÕ÷£©
-        {
-            Left_Up_Guai[0]=Find_Left_Up_Point(MT9V03X_H-10,0);
-            Left_Up_Guai[1]=Left_Line[Left_Up_Guai[0]];
-            
-            if((Island_State==7)&&(Left_Up_Guai[1]<=100)&&(5<=Left_Up_Guai[0]&&Left_Up_Guai[0]<=MT9V03X_H-20))
-            {
-                Island_State=8;
-            }
-        }
-
-        else if(Island_State==8)  //³ö»·½áÊø
-        {
-            Left_Up_Guai[0]=Find_Left_Up_Point(MT9V03X_H-1,10);
-            Left_Up_Guai[1]=Left_Line[Left_Up_Guai[0]];
-            Lengthen_Left_Boundry(Left_Up_Guai[0]-1,MT9V03X_H-1);
-            
-            if((Island_State==8)&&(Left_Up_Guai[0]>=MT9V03X_H-20||(Left_Up_Guai[0]<10&&Boundry_Start_Left>=MT9V03X_H-10)))
-            {
-                yaw=0;
-                Island_State=9;
-                Left_Island_Flag=0;
-            }
-        }
-    }
-
-    else if(Right_Island_Flag==1)  //ÓÒ»·µº×´Ì¬»úÁ÷×ª
-    {
-        if(Island_State==1)
-        {
-            //»ùÓÚÓÒ±ß½çµ¥µ÷ÐÔ±ä»¯µãÁ¬Ïß
-            monotonicity_change_line[0]=Monotonicity_Change_Right(30,5);  //ÓÒ±ß½çµ¥µ÷ÐÔ¸Ä±äµã
-            monotonicity_change_line[1]=Right_Line[monotonicity_change_line[0]];
-            Right_Add_Line((int)(MT9V03X_W-1-(monotonicity_change_line[1]*0.15)),MT9V03X_H-1,monotonicity_change_line[1],monotonicity_change_line[0]);
-            
-            if(Boundry_Start_Right<=30)//¿¿½üÏÂ¹Õµã½øÈë×´Ì¬2
-            {
-                Island_State=2;
-            }
-        }
-
-        else if(Island_State==2)
-        {
-            monotonicity_change_line[0]=Monotonicity_Change_Right(70,5);  //ÓÒ±ß½çµ¥µ÷ÐÔ¸Ä±äµã
-            monotonicity_change_line[1]=Right_Line[monotonicity_change_line[0]];
-            Right_Add_Line((int)(MT9V03X_W-1-(monotonicity_change_line[1]*0.15)),MT9V03X_H-1,monotonicity_change_line[1],monotonicity_change_line[0]);
-            
-            if(Island_State==2&&(Boundry_Start_Right>=MT9V03X_H-5||monotonicity_change_line[0]>50))
-            {
-                Island_State=3;
-                Right_Island_Flag=1;
-            }
-        }
-
-        else if(Island_State==3)  //×¼±¸½ø»·£ºÒÀÀµÓÒ±ß½ç¹ÕµãÓëµ¥µ÷ÐÔ
-        {
-            if(k!=0)
-            {
-                K_Draw_Line(k,30,MT9V03X_H-1,0);
-                Longest_White_Column();
-            }
-            else
-            {
-                Right_Up_Guai[0]=Find_Right_Up_Point(40,10);  //ÓÒÉÏ»·µã
-                Right_Up_Guai[1]=Right_Line[Right_Up_Guai[0]];
-
-                if(Right_Up_Guai[0]<10)
-                {
-                    Island_State=0;
-                    Right_Island_Flag=0;
-                }
-
-                if(k==0&&(15<=Right_Up_Guai[0]&&Right_Up_Guai[0]<50)&&(70<Right_Up_Guai[1]&&Right_Up_Guai[1]<150))
-                {
-                    island_state_3_up[0]= Right_Up_Guai[0];
-                    island_state_3_up[1]= Right_Up_Guai[1];
-                    k=(float)((float)(MT9V03X_H-island_state_3_up[0])/(float)(20-island_state_3_up[1]));
-                    K_Draw_Line(k,30,MT9V03X_H-1,0);
-                    Longest_White_Column();
-                }
-            }
-
-            if((Island_State==3)&&(abs(gz)>=400))
-            {
-                k=0;
-                Island_State=4;
-                Longest_White_Column();
-            }
-        }
-
-        else if(Island_State==4)  //ÒÑ½ø»·£º¼à²â×ó±ß½çµ¥µ÷ÐÔ±ä»¯
-        {
-            monotonicity_change_line[0]=Monotonicity_Change_Left(90,10);  //×ó±ß½çµ¥µ÷ÐÔ¸Ä±äµã
-            monotonicity_change_line[1]=Left_Line[monotonicity_change_line[0]];
-            
-            if((Island_State==4)&&(35<=monotonicity_change_line[0]&&monotonicity_change_line[0]<=55&&monotonicity_change_line[1]<MT9V03X_W-10))
-            {
-                island_state_5_down[0]=MT9V03X_H-1;
-                island_state_5_down[1]=Left_Line[MT9V03X_H-1]-5;
-                k=(float)((float)(MT9V03X_H-monotonicity_change_line[0])/(float)(island_state_5_down[1]-monotonicity_change_line[1]));
-                K_Add_Boundry_Left(k,island_state_5_down[1],island_state_5_down[0],0);
-                Island_State=5;
-            }
-        }
-
-        else if(Island_State==5)  //×¼±¸³ö»·
-        {
-            K_Add_Boundry_Left(k,island_state_5_down[1],island_state_5_down[0],0);
-            
-            if(Island_State==5&&Boundry_Start_Left<MT9V03X_H-20)
-            {
-                Island_State=6;
-            }
-        }
-
-        else if(Island_State==6)  //¼ÌÐø³ö»·
-        {
-            K_Add_Boundry_Left(k,island_state_5_down[1],island_state_5_down[0],0);
-            
-            if((Island_State==6)&&(Boundry_Start_Left>MT9V03X_H-10||abs(gz)>=400))
-            {
-                k=0;
-                Island_State=7;
-            }
-        }
-
-        else if(Island_State==7)  //ÕÒÓÒ¹Õµã£¨»ùÓÚÓÒ±ß½çÌØÕ÷£©
-        {
-            Right_Up_Guai[0]=Find_Right_Up_Point(MT9V03X_H-10,0);
-            Right_Up_Guai[1]=Right_Line[Right_Up_Guai[0]];
-            
-            if((Island_State==7)&&((Right_Up_Guai[1]>=MT9V03X_W-88&&(5<=Right_Up_Guai[0]&&Right_Up_Guai[0]<=MT9V03X_H-20))))
-            {
-                Island_State=8;
-            }
-        }
-
-        else if(Island_State==8)  //³ö»·½áÊø
-        {
-            Right_Up_Guai[0]=Find_Right_Up_Point(MT9V03X_H-1,10);
-            Right_Up_Guai[1]=Right_Line[Right_Up_Guai[0]];
-            Lengthen_Right_Boundry(Right_Up_Guai[0]-1,MT9V03X_H-1);
-            
-            if((Island_State==8)&&(Right_Up_Guai[0]>=MT9V03X_H-20||(Right_Up_Guai[0]<10&&Boundry_Start_Left>=MT9V03X_H-10)))
-            {
-                Island_State=9;
-                Right_Island_Flag=0;
-            }
-        }
-    }
-}
 
 
 /*-------------------------------------------------------------------------------------------------------------------
@@ -368,33 +365,33 @@ void Island_Detect()
   Sample     Continuity_Change_Left(int start,int end);
   @note      Á¬ÐøÐÔµÄãÐÖµÉèÖÃÎª5£¬¿É¸ü¸Ä
 -------------------------------------------------------------------------------------------------------------------*/
-int Continuity_Change_Left(int start,int end)//Á¬ÐøÐÔãÐÖµÉèÖÃÎª5
+int Continuity_Change_Left(int start, int end) // Á¬ÐøÐÔãÐÖµÉèÖÃÎª5
 {
     int i;
     int t;
-    int continuity_change_flag=0;
-    if(Left_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»±ØÒªÅÐ¶ÏÁË
-       return 1;
-    if(Search_Stop_Line<=5)//ËÑËù½ØÖ¹ÐÐºÜ°«
-       return 1;
-    if(start>=MT9V03X_H-1-5)//Êý×éÔ½½ç±£»¤
-        start=MT9V03X_H-1-5;
-    if(end<=5)
-       end=5;
-    if(start<end)//¶¼ÊÇ´ÓÏÂÍùÉÏ¼ÆËãµÄ£¬·´ÁË¾Í»¥»»Ò»ÏÂ
+    int continuity_change_flag = 0;
+    if (Left_Lost_Time >= 0.9 * MT9V03X_H) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»±ØÒªÅÐ¶ÏÁË
+        return 1;
+    if (Search_Stop_Line <= 5) // ËÑËù½ØÖ¹ÐÐºÜ°«
+        return 1;
+    if (start >= MT9V03X_H - 1 - 5) // Êý×éÔ½½ç±£»¤
+        start = MT9V03X_H - 1 - 5;
+    if (end <= 5)
+        end = 5;
+    if (start < end) // ¶¼ÊÇ´ÓÏÂÍùÉÏ¼ÆËãµÄ£¬·´ÁË¾Í»¥»»Ò»ÏÂ
     {
-       t=start;
-       start=end;
-       end=t;
+        t = start;
+        start = end;
+        end = t;
     }
-    
-    for(i=start;i>=end;i--)
+
+    for (i = start; i >= end; i--)
     {
-       if(abs(Left_Line[i]-Left_Line[i-1])>=5)//Á¬ÐøÅÐ¶ÏãÐÖµÊÇ5,¿É¸ü¸Ä
-       {
-            continuity_change_flag=i;
+        if (abs(Left_Line[i] - Left_Line[i - 1]) >= 3) // Á¬ÐøÅÐ¶ÏãÐÖµÊÇ3,¿É¸ü¸Ä
+        {
+            continuity_change_flag = i;
             break;
-       }
+        }
     }
     return continuity_change_flag;
 }
@@ -406,31 +403,31 @@ int Continuity_Change_Left(int start,int end)//Á¬ÐøÐÔãÐÖµÉèÖÃÎª5
   Sample     continuity_change_flag=Continuity_Change_Right(int start,int end)
   @note      Á¬ÐøÐÔµÄãÐÖµÉèÖÃÎª5£¬¿É¸ü¸Ä
 -------------------------------------------------------------------------------------------------------------------*/
-int Continuity_Change_Right(int start,int end)
+int Continuity_Change_Right(int start, int end)
 {
     int i;
     int t;
-    int continuity_change_flag=0;
-    if(Right_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»±ØÒªÅÐ¶ÏÁË
-       return 1;
-    if(start>=MT9V03X_H-5)//Êý×éÔ½½ç±£»¤
-        start=MT9V03X_H-5;
-    if(end<=5)
-       end=5;
-    if(start<end)//¶¼ÊÇ´ÓÏÂÍùÉÏ¼ÆËãµÄ£¬·´ÁË¾Í»¥»»Ò»ÏÂ
+    int continuity_change_flag = 0;
+    if (Right_Lost_Time >= 0.9 * MT9V03X_H) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»±ØÒªÅÐ¶ÏÁË
+        return 1;
+    if (start >= MT9V03X_H - 5) // Êý×éÔ½½ç±£»¤
+        start = MT9V03X_H - 5;
+    if (end <= 5)
+        end = 5;
+    if (start < end) // ¶¼ÊÇ´ÓÏÂÍùÉÏ¼ÆËãµÄ£¬·´ÁË¾Í»¥»»Ò»ÏÂ
     {
-       t=start;
-       start=end;
-       end=t;
+        t = start;
+        start = end;
+        end = t;
     }
 
-    for(i=start;i>=end;i--)
+    for (i = start; i >= end; i--)
     {
-        if(abs(Right_Line[i]-Right_Line[i-1])>=5)//Á¬ÐøÐÔãÐÖµÊÇ5£¬¿É¸ü¸Ä
-       {
-            continuity_change_flag=i;
+        if (abs(Right_Line[i] - Right_Line[i - 1]) >= 3) // Á¬ÐøÐÔãÐÖµÊÇ3£¬¿É¸ü¸Ä
+        {
+            continuity_change_flag = i;
             break;
-       }
+        }
     }
     return continuity_change_flag;
 }
@@ -442,35 +439,35 @@ int Continuity_Change_Right(int start,int end)
   Sample     Find_Left_Down_Point(int start,int end);
   @note      ½Çµã¼ì²âãÐÖµ¿É¸ù¾ÝÊµ¼ÊÖµ¸ü¸Ä
 -------------------------------------------------------------------------------------------------------------------*/
-int Find_Left_Down_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
+int Find_Left_Down_Point(int start, int end) // ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
 {
-    int i,t;
-    int left_down_line=0;
-    if(Left_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
-       return left_down_line;
-    if(start<end)
+    int i, t;
+    int left_down_line = 0;
+    if (Left_Lost_Time >= 0.9 * MT9V03X_H) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
+        return left_down_line;
+    if (start < end)
     {
-        t=start;
-        start=end;
-        end=t;
+        t = start;
+        start = end;
+        end = t;
     }
-    if(start>=MT9V03X_H-1-5)//ÏÂÃæ5ÐÐÊý¾Ý²»ÎÈ¶¨£¬²»ÄÜ×÷Îª±ß½çµãÀ´ÅÐ¶Ï£¬ÉáÆú
-        start=MT9V03X_H-1-5;
-    if(end<=MT9V03X_H-Search_Stop_Line)
-        end=MT9V03X_H-Search_Stop_Line;
-    if(end<=5)
-       end=5;
-    for(i=start;i>=end;i--)
+    if (start >= MT9V03X_H - 1 - 5) // ÏÂÃæ5ÐÐÊý¾Ý²»ÎÈ¶¨£¬²»ÄÜ×÷Îª±ß½çµãÀ´ÅÐ¶Ï£¬ÉáÆú
+        start = MT9V03X_H - 1 - 5;
+    if (end <= MT9V03X_H - Search_Stop_Line)
+        end = MT9V03X_H - Search_Stop_Line;
+    if (end <= 5)
+        end = 5;
+    for (i = start; i >= end; i--)
     {
-        if(left_down_line==0&&//Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
-           abs(Left_Line[i]-Left_Line[i+1])<=5&&//½ÇµãµÄãÐÖµ¿ÉÒÔ¸ü¸Ä
-           abs(Left_Line[i+1]-Left_Line[i+2])<=5&&  
-           abs(Left_Line[i+2]-Left_Line[i+3])<=5&&
-              (Left_Line[i]-Left_Line[i-2])>=5&&
-              (Left_Line[i]-Left_Line[i-3])>=10&&
-              (Left_Line[i]-Left_Line[i-4])>=10)
+        if (left_down_line == 0 &&                       // Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
+            abs(Left_Line[i] - Left_Line[i + 1]) <= 5 && // ½ÇµãµÄãÐÖµ¿ÉÒÔ¸ü¸Ä
+            abs(Left_Line[i + 1] - Left_Line[i + 2]) <= 5 &&
+            abs(Left_Line[i + 2] - Left_Line[i + 3]) <= 5 &&
+            (Left_Line[i] - Left_Line[i - 2]) >= 5 &&
+            (Left_Line[i] - Left_Line[i - 3]) >= 10 &&
+            (Left_Line[i] - Left_Line[i - 4]) >= 10)
         {
-            left_down_line=i;//»ñÈ¡ÐÐÊý¼´¿É
+            left_down_line = i; // »ñÈ¡ÐÐÊý¼´¿É
             break;
         }
     }
@@ -484,39 +481,39 @@ int Find_Left_Down_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
   Sample     Find_Left_Up_Point(int start,int end);
   @note      ½Çµã¼ì²âãÐÖµ¿É¸ù¾ÝÊµ¼ÊÖµ¸ü¸Ä
 -------------------------------------------------------------------------------------------------------------------*/
-int Find_Left_Up_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
+int Find_Left_Up_Point(int start, int end) // ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
 {
-    int i,t;
-    int left_up_line=0;
-    if(Left_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
-       return left_up_line;
-    if(start<end)
+    int i, t;
+    int left_up_line = 0;
+    if (Left_Lost_Time >= 0.9 * MT9V03X_H) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
+        return left_up_line;
+    if (start < end)
     {
-        t=start;
-        start=end;
-        end=t;
+        t = start;
+        start = end;
+        end = t;
     }
-    if(end<=MT9V03X_H-Search_Stop_Line)//ËÑË÷½ØÖ¹ÐÐÍùÉÏµÄÈ«¶¼²»ÅÐ
-        end=MT9V03X_H-Search_Stop_Line;
-    if(end<=5)//¼°Ê±×î³¤°×ÁÐ·Ç³£³¤£¬Ò²ÒªÉáÆú²¿·Öµã£¬·ÀÖ¹Êý×éÔ½½ç
-        end=5;
-    if(start>=MT9V03X_H-1-5)
-        start=MT9V03X_H-1-5;
-    for(i=start;i>=end;i--)
+    if (end <= MT9V03X_H - Search_Stop_Line) // ËÑË÷½ØÖ¹ÐÐÍùÉÏµÄÈ«¶¼²»ÅÐ
+        end = MT9V03X_H - Search_Stop_Line;
+    if (end <= 5) // ¼°Ê±×î³¤°×ÁÐ·Ç³£³¤£¬Ò²ÒªÉáÆú²¿·Öµã£¬·ÀÖ¹Êý×éÔ½½ç
+        end = 5;
+    if (start >= MT9V03X_H - 1 - 5)
+        start = MT9V03X_H - 1 - 5;
+    for (i = start; i >= end; i--)
     {
-        if(left_up_line==0&&//Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
-           abs(Left_Line[i]-Left_Line[i-1])<=5&&
-           abs(Left_Line[i-1]-Left_Line[i-2])<=5&&  
-           abs(Left_Line[i-2]-Left_Line[i-3])<=5&&
-              (Left_Line[i]-Left_Line[i+2])>=8&& 
-              (Left_Line[i]-Left_Line[i+3])>=15&&
-              (Left_Line[i]-Left_Line[i+4])>=15)
+        if (left_up_line == 0 && // Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
+            abs(Left_Line[i] - Left_Line[i - 1]) <= 5 &&
+            abs(Left_Line[i - 1] - Left_Line[i - 2]) <= 5 &&
+            abs(Left_Line[i - 2] - Left_Line[i - 3]) <= 5 &&
+            (Left_Line[i] - Left_Line[i + 2]) >= 8 &&
+            (Left_Line[i] - Left_Line[i + 3]) >= 15 &&
+            (Left_Line[i] - Left_Line[i + 4]) >= 15)
         {
-            left_up_line=i;//»ñÈ¡ÐÐÊý¼´¿É
+            left_up_line = i; // »ñÈ¡ÐÐÊý¼´¿É
             break;
         }
     }
-    return left_up_line;//Èç¹ûÊÇMT9V03X_H-1£¬ËµÃ÷Ã»ÓÐÕâÃ´¸ö¹Õµã
+    return left_up_line; // Èç¹ûÊÇMT9V03X_H-1£¬ËµÃ÷Ã»ÓÐÕâÃ´¸ö¹Õµã
 }
 
 /*-------------------------------------------------------------------------------------------------------------------
@@ -526,35 +523,35 @@ int Find_Left_Up_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
   Sample     Find_Right_Down_Point(int start,int end);
   @note      ½Çµã¼ì²âãÐÖµ¿É¸ù¾ÝÊµ¼ÊÖµ¸ü¸Ä
 -------------------------------------------------------------------------------------------------------------------*/
-int Find_Right_Down_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
+int Find_Right_Down_Point(int start, int end) // ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
 {
-    int i,t;
-    int right_down_line=0;
-    if(Right_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
+    int i, t;
+    int right_down_line = 0;
+    if (Right_Lost_Time >= 0.9 * MT9V03X_H) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
         return right_down_line;
-    if(start<end)
+    if (start < end)
     {
-        t=start;
-        start=end;
-        end=t;
+        t = start;
+        start = end;
+        end = t;
     }
-    if(start>=MT9V03X_H-1-5)//ÏÂÃæ5ÐÐÊý¾Ý²»ÎÈ¶¨£¬²»ÄÜ×÷Îª±ß½çµãÀ´ÅÐ¶Ï£¬ÉáÆú
-        start=MT9V03X_H-1-5;
-    if(end<=MT9V03X_H-Search_Stop_Line)
-        end=MT9V03X_H-Search_Stop_Line;
-    if(end<=5)
-       end=5;
-    for(i=start;i>=end;i--)
+    if (start >= MT9V03X_H - 1 - 5) // ÏÂÃæ5ÐÐÊý¾Ý²»ÎÈ¶¨£¬²»ÄÜ×÷Îª±ß½çµãÀ´ÅÐ¶Ï£¬ÉáÆú
+        start = MT9V03X_H - 1 - 5;
+    if (end <= MT9V03X_H - Search_Stop_Line)
+        end = MT9V03X_H - Search_Stop_Line;
+    if (end <= 5)
+        end = 5;
+    for (i = start; i >= end; i--)
     {
-        if(right_down_line==0&&//Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
-           abs(Right_Line[i]-Right_Line[i+1])<=5&&//½ÇµãµÄãÐÖµ¿ÉÒÔ¸ü¸Ä
-           abs(Right_Line[i+1]-Right_Line[i+2])<=5&&  
-           abs(Right_Line[i+2]-Right_Line[i+3])<=5&&
-              (Right_Line[i]-Right_Line[i-2])<=-5&&
-              (Right_Line[i]-Right_Line[i-3])<=-10&&
-              (Right_Line[i]-Right_Line[i-4])<=-10)
+        if (right_down_line == 0 &&                        // Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
+            abs(Right_Line[i] - Right_Line[i + 1]) <= 5 && // ½ÇµãµÄãÐÖµ¿ÉÒÔ¸ü¸Ä
+            abs(Right_Line[i + 1] - Right_Line[i + 2]) <= 5 &&
+            abs(Right_Line[i + 2] - Right_Line[i + 3]) <= 5 &&
+            (Right_Line[i] - Right_Line[i - 2]) <= -5 &&
+            (Right_Line[i] - Right_Line[i - 3]) <= -10 &&
+            (Right_Line[i] - Right_Line[i - 4]) <= -10)
         {
-            right_down_line=i;//»ñÈ¡ÐÐÊý¼´¿É
+            right_down_line = i; // »ñÈ¡ÐÐÊý¼´¿É
             break;
         }
     }
@@ -568,35 +565,35 @@ int Find_Right_Down_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
   Sample     Find_Right_Up_Point(int start,int end);
   @note      ½Çµã¼ì²âãÐÖµ¿É¸ù¾ÝÊµ¼ÊÖµ¸ü¸Ä
 -------------------------------------------------------------------------------------------------------------------*/
-int Find_Right_Up_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
+int Find_Right_Up_Point(int start, int end) // ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
 {
-    int i,t;
-    int right_up_line=0;
-    if(Right_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
+    int i, t;
+    int right_up_line = 0;
+    if (Right_Lost_Time >= 0.9 * MT9V03X_H) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐ¹ÕµãÅÐ¶ÏµÄÒâÒå
         return right_up_line;
-    if(start<end)
+    if (start < end)
     {
-        t=start;
-        start=end;
-        end=t;
-    }    
-    if(end<=MT9V03X_H-Search_Stop_Line)//ËÑË÷½ØÖ¹ÐÐÍùÉÏµÄÈ«¶¼²»ÅÐ
-        end=MT9V03X_H-Search_Stop_Line;
-    if(end<=5)//¼°Ê±×î³¤°×ÁÐ·Ç³£³¤£¬Ò²ÒªÉáÆú²¿·Öµã£¬·ÀÖ¹Êý×éÔ½½ç
-        end=5;
-    if(start>=MT9V03X_H-1-5)
-        start=MT9V03X_H-1-5;
-    for(i=start;i>=end;i--)
+        t = start;
+        start = end;
+        end = t;
+    }
+    if (end <= MT9V03X_H - Search_Stop_Line) // ËÑË÷½ØÖ¹ÐÐÍùÉÏµÄÈ«¶¼²»ÅÐ
+        end = MT9V03X_H - Search_Stop_Line;
+    if (end <= 5) // ¼°Ê±×î³¤°×ÁÐ·Ç³£³¤£¬Ò²ÒªÉáÆú²¿·Öµã£¬·ÀÖ¹Êý×éÔ½½ç
+        end = 5;
+    if (start >= MT9V03X_H - 1 - 5)
+        start = MT9V03X_H - 1 - 5;
+    for (i = end; i >= start; i++)
     {
-        if(right_up_line==0&&//Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
-           abs(Right_Line[i]-Right_Line[i-1])<=5&&//ÏÂÃæÁ½ÐÐÎ»ÖÃ²î²»¶à
-           abs(Right_Line[i-1]-Right_Line[i-2])<=5&&  
-           abs(Right_Line[i-2]-Right_Line[i-3])<=5&&
-              (Right_Line[i]-Right_Line[i+2])<=-8&&
-              (Right_Line[i]-Right_Line[i+3])<=-15&&
-              (Right_Line[i]-Right_Line[i+4])<=-15)
+        if (right_up_line == 0 &&                          // Ö»ÕÒµÚÒ»¸ö·ûºÏÌõ¼þµÄµã
+            abs(Right_Line[i] - Right_Line[i - 1]) <= 5 && // ÏÂÃæÁ½ÐÐÎ»ÖÃ²î²»¶à
+            abs(Right_Line[i - 1] - Right_Line[i - 2]) <= 5 &&
+            abs(Right_Line[i - 2] - Right_Line[i - 3]) <= 5 &&
+            (Right_Line[i] - Right_Line[i + 2]) <= -8 &&
+            (Right_Line[i] - Right_Line[i + 3]) <= -15 &&
+            (Right_Line[i] - Right_Line[i + 4]) <= -15)
         {
-            right_up_line=i;//»ñÈ¡ÐÐÊý¼´¿É
+            right_up_line = i; // »ñÈ¡y×ø±ê¼´¿É
             break;
         }
     }
@@ -610,35 +607,33 @@ int Find_Right_Up_Point(int start,int end)//ÕÒËÄ¸ö½Çµã£¬·µ»ØÖµÊÇ½ÇµãËùÔÚµÄÐÐÊý
   Sample     Find_Right_Up_Point(int start,int end);
   @note      Ç°5ºó5Ëü×î´ó£¨×îÐ¡£©£¬ÄÇËû¾ÍÊÇ½Çµã
 -------------------------------------------------------------------------------------------------------------------*/
-int Monotonicity_Change_Left(int start,int end)//µ¥µ÷ÐÔ¸Ä±ä£¬·µ»ØÖµÊÇµ¥µ÷ÐÔ¸Ä±äµãËùÔÚµÄÐÐÊý
+int Monotonicity_Change_Left(int start, int end) // µ¥µ÷ÐÔ¸Ä±ä£¬·µ»ØÖµÊÇµ¥µ÷ÐÔ¸Ä±äµãËùÔÚµÄÐÐÊý
 {
     int i;
-    int monotonicity_change_line=0;
-    if(Left_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐµ¥µ÷ÐÔÅÐ¶ÏµÄÒâÒå
-       return monotonicity_change_line;
-    if(start>=MT9V03X_H-1-5)//Êý×éÔ½½ç±£»¤£¬ÔÚÅÐ¶ÏµÚi¸öµãÊ±
-       start=MT9V03X_H-1-5; //Òª·ÃÎÊËüÇ°ºó5¸öµã£¬Êý×éÁ½Í·µÄµãÒª²»ÄÜ×÷ÎªÆðµãÖÕµã
-    if(end<=5)
-        end=5;
-    if(start<=end)//µÝ¼õ¼ÆËã£¬Èë¿Ú·´ÁË£¬Ö±½Ó·µ»Ø0
-      return monotonicity_change_line;
-    for(i=start;i>=end;i--)//»á¶ÁÈ¡Ç°5ºó5Êý¾Ý£¬ËùÒÔÇ°Ãæ¶ÔÊäÈë·¶Î§ÓÐÒªÇó
+    int monotonicity_change_line = 0;
+    if (Left_Lost_Time >=100) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐµ¥µ÷ÐÔÅÐ¶ÏµÄÒâÒå
+        return monotonicity_change_line;
+    if (start >= MT9V03X_H - 1 - 5) // Êý×éÔ½½ç±£»¤£¬ÔÚÅÐ¶ÏµÚi¸öµãÊ±
+        start = MT9V03X_H - 1 - 5;  // Òª·ÃÎÊËüÇ°ºó5¸öµã£¬Êý×éÁ½Í·µÄµãÒª²»ÄÜ×÷ÎªÆðµãÖÕµã
+    if (end <= 5)
+        end = 5;
+    if (start <= end) // µÝ¼õ¼ÆËã£¬Èë¿Ú·´ÁË£¬Ö±½Ó·µ»Ø0
+        return monotonicity_change_line;
+    for (i = start; i >= end; i--) // »á¶ÁÈ¡Ç°5ºó5Êý¾Ý£¬ËùÒÔÇ°Ãæ¶ÔÊäÈë·¶Î§ÓÐÒªÇó
     {
-        if(Left_Line[i]==Left_Line[i+5]&&Left_Line[i]==Left_Line[i-5]&&
-        Left_Line[i]==Left_Line[i+4]&&Left_Line[i]==Left_Line[i-4]&&
-        Left_Line[i]==Left_Line[i+3]&&Left_Line[i]==Left_Line[i-3]&&
-        Left_Line[i]==Left_Line[i+2]&&Left_Line[i]==Left_Line[i-2]&&
-        Left_Line[i]==Left_Line[i+1]&&Left_Line[i]==Left_Line[i-1])
-        {//Ò»¶ÑÊý¾ÝÒ»Ñù£¬ÏÔÈ»²»ÄÜ×÷Îªµ¥µ÷×ªÕÛµã
+        if (
+            Left_Line[i] == Left_Line[i + 3] && Left_Line[i] == Left_Line[i - 3] &&
+            Left_Line[i] == Left_Line[i + 2] && Left_Line[i] == Left_Line[i - 2] &&
+            Left_Line[i] == Left_Line[i + 1] && Left_Line[i] == Left_Line[i - 1])
+        { // Ò»¶ÑÊý¾ÝÒ»Ñù£¬ÏÔÈ»²»ÄÜ×÷Îªµ¥µ÷×ªÕÛµã
             continue;
         }
-        else if(Left_Line[i]>=Left_Line[i+5]&&Left_Line[i]>=Left_Line[i-5]&&
-        Left_Line[i]>=Left_Line[i+4]&&Left_Line[i]>=Left_Line[i-4]&&
-        Left_Line[i]>=Left_Line[i+3]&&Left_Line[i]>=Left_Line[i-3]&&
-        Left_Line[i]>=Left_Line[i+2]&&Left_Line[i]>=Left_Line[i-2]&&
-        Left_Line[i]>=Left_Line[i+1]&&Left_Line[i]>=Left_Line[i-1])
-        {//¾ÍºÜ±©Á¦£¬Õâ¸öÊý¾ÝÊÇÔÚÇ°5£¬ºó5ÖÐ×î´óµÄ£¨¿ÉÒÔÈ¡µÈ£©£¬ÄÇ¾ÍÊÇµ¥µ÷Í»±äµã
-            monotonicity_change_line=i;
+        else if (
+                 Left_Line[i] >= Left_Line[i + 3] && Left_Line[i] >= Left_Line[i - 3] &&
+                 Left_Line[i] >= Left_Line[i + 2] && Left_Line[i] >= Left_Line[i - 2] &&
+                 Left_Line[i] >= Left_Line[i + 1] && Left_Line[i] >= Left_Line[i - 1])
+        { // ¾ÍºÜ±©Á¦£¬Õâ¸öÊý¾ÝÊÇÔÚÇ°5£¬ºó5ÖÐ×î´óµÄ£¨¿ÉÒÔÈ¡µÈ£©£¬ÄÇ¾ÍÊÇµ¥µ÷Í»±äµã
+            monotonicity_change_line = i;
             break;
         }
     }
@@ -652,43 +647,41 @@ int Monotonicity_Change_Left(int start,int end)//µ¥µ÷ÐÔ¸Ä±ä£¬·µ»ØÖµÊÇµ¥µ÷ÐÔ¸Ä±äµ
   Sample     Find_Right_Up_Point(int start,int end);
   @note      Ç°5ºó5Ëü×î´ó£¨×îÐ¡£©£¬ÄÇËû¾ÍÊÇ½Çµã
 -------------------------------------------------------------------------------------------------------------------*/
-int Monotonicity_Change_Right(int start,int end)//µ¥µ÷ÐÔ¸Ä±ä£¬·µ»ØÖµÊÇµ¥µ÷ÐÔ¸Ä±äµãËùÔÚµÄÐÐÊý
+int Monotonicity_Change_Right(int start, int end) // µ¥µ÷ÐÔ¸Ä±ä£¬·µ»ØÖµÊÇµ¥µ÷ÐÔ¸Ä±äµãËùÔÚµÄÐÐÊý
 {
     int i;
-    int monotonicity_change_line=0;
+    int monotonicity_change_line = 0;
 
-    if(Right_Lost_Time>=0.9*MT9V03X_H)//´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐµ¥µ÷ÐÔÅÐ¶ÏµÄÒâÒå
+    if (Right_Lost_Time >= 100) // ´ó²¿·Ö¶¼¶ªÏß£¬Ã»ÓÐµ¥µ÷ÐÔÅÐ¶ÏµÄÒâÒå
         return monotonicity_change_line;
-    if(start>=MT9V03X_H-1-5)//Êý×éÔ½½ç±£»¤
-        start=MT9V03X_H-1-5;
-     if(end<=5)
-        end=5;
-    if(start<=end)
+    if (start >= MT9V03X_H - 1 - 5) // Êý×éÔ½½ç±£»¤
+        start = MT9V03X_H - 1 - 5;
+    if (end <= 5)
+        end = 5;
+    if (start <= end)
         return monotonicity_change_line;
-    for(i=start;i>=end;i--)//»á¶ÁÈ¡Ç°5ºó5Êý¾Ý£¬ËùÒÔÇ°Ãæ¶ÔÊäÈë·¶Î§ÓÐÒªÇó
+		
+		
+    for (i = start; i >= end; i--) // »á¶ÁÈ¡Ç°5ºó5Êý¾Ý£¬ËùÒÔÇ°Ãæ¶ÔÊäÈë·¶Î§ÓÐÒªÇó
     {
-        if(Right_Line[i]==Right_Line[i+5]&&Right_Line[i]==Right_Line[i-5]&&
-        Right_Line[i]==Right_Line[i+4]&&Right_Line[i]==Right_Line[i-4]&&
-        Right_Line[i]==Right_Line[i+3]&&Right_Line[i]==Right_Line[i-3]&&
-        Right_Line[i]==Right_Line[i+2]&&Right_Line[i]==Right_Line[i-2]&&
-        Right_Line[i]==Right_Line[i+1]&&Right_Line[i]==Right_Line[i-1])
-        {//Ò»¶ÑÊý¾ÝÒ»Ñù£¬ÏÔÈ»²»ÄÜ×÷Îªµ¥µ÷×ªÕÛµã
+        if (
+            Right_Line[i] == Right_Line[i + 3] && Right_Line[i] == Right_Line[i - 3] &&
+            Right_Line[i] == Right_Line[i + 2] && Right_Line[i] == Right_Line[i - 2] &&
+            Right_Line[i] == Right_Line[i + 1] && Right_Line[i] == Right_Line[i - 1])
+        { // //Èç¹ûµ±Ç°µãÓëÇ°ºó3¸öµãÏàµÈ£¬¼ÌÐø
             continue;
         }
-        else if(Right_Line[i]<=Right_Line[i+5]&&Right_Line[i]<=Right_Line[i-5]&&
-        Right_Line[i]<=Right_Line[i+4]&&Right_Line[i]<=Right_Line[i-4]&&
-        Right_Line[i]<=Right_Line[i+3]&&Right_Line[i]<=Right_Line[i-3]&&
-        Right_Line[i]<=Right_Line[i+2]&&Right_Line[i]<=Right_Line[i-2]&&
-        Right_Line[i]<=Right_Line[i+1]&&Right_Line[i]<=Right_Line[i-1])
-        {//¾ÍºÜ±©Á¦£¬Õâ¸öÊý¾ÝÊÇÔÚÇ°5£¬ºó5ÖÐ×î´óµÄ£¬ÄÇ¾ÍÊÇµ¥µ÷Í»±äµã
-            monotonicity_change_line=i;
+        else if (
+                 Right_Line[i] <= Right_Line[i + 3] && Right_Line[i] <= Right_Line[i - 3] &&
+                 Right_Line[i] <= Right_Line[i + 2] && Right_Line[i] <= Right_Line[i - 2] &&
+                 Right_Line[i] <= Right_Line[i + 1] && Right_Line[i] <= Right_Line[i - 1])
+        { ////Èç¹ûµ±Ç°µã´óÓÚÇ°ºó3¸öµã£¬ÈÏÎªÊÇÍ»±äµã
+            monotonicity_change_line = i;
             break;
         }
     }
     return monotonicity_change_line;
 }
-
-
 
 /*-------------------------------------------------------------------------------------------------------------------
   @brief     Í¨¹ýÐ±ÂÊ£¬¶¨µã²¹Ïß--
@@ -699,33 +692,33 @@ int Monotonicity_Change_Right(int start,int end)//µ¥µ÷ÐÔ¸Ä±ä£¬·µ»ØÖµÊÇµ¥µ÷ÐÔ¸Ä±ä
   Sample     K_Add_Boundry_Left(float k,int startY,int endY);
   @note      ²¹µÃÏßÖ±½ÓÌùÔÚ±ßÏßÉÏ
 -------------------------------------------------------------------------------------------------------------------*/
-void K_Add_Boundry_Left(float k,int startX,int startY,int endY)
+void K_Add_Boundry_Left(float k, int startX, int startY, int endY)
 {
-    int i,t;
-    if(startY>=MT9V03X_H-1)
-        startY=MT9V03X_H-1;
-    else if(startY<=0)
-        startY=0;
-    if(endY>=MT9V03X_H-1)
-        endY=MT9V03X_H-1;
-    else if(endY<=0)
-        endY=0;
-    if(startY<endY)//--²Ù×÷£¬startÐèÒª´ó
+    int i, t;
+    if (startY >= MT9V03X_H - 1)
+        startY = MT9V03X_H - 1;
+    else if (startY <= 0)
+        startY = 0;
+    if (endY >= MT9V03X_H - 1)
+        endY = MT9V03X_H - 1;
+    else if (endY <= 0)
+        endY = 0;
+    if (startY < endY) //--²Ù×÷£¬startÐèÒª´ó
     {
-        t=startY;
-        startY=endY;
-        endY=t;
+        t = startY;
+        startY = endY;
+        endY = t;
     }
-    for(i=startY;i>=endY;i--)
+    for (i = startY; i >= endY; i--)
     {
-        Left_Line[i]=(int)((i-startY)/k+startX);//(y-y1)=k(x-x1)±äÐÎ£¬x=(y-y1)/k+x1
-        if(Left_Line[i]>=MT9V03X_W-1)
+        Left_Line[i] = (int)((i - startY) / k + startX); //(y-y1)=k(x-x1)±äÐÎ£¬x=(y-y1)/k+x1
+        if (Left_Line[i] >= MT9V03X_W - 1)
         {
-            Left_Line[i]=MT9V03X_W-1;
+            Left_Line[i] = MT9V03X_W - 1;
         }
-        else if(Left_Line[i]<=0)
+        else if (Left_Line[i] <= 0)
         {
-            Left_Line[i]=0;
+            Left_Line[i] = 0;
         }
     }
 }
@@ -739,33 +732,33 @@ void K_Add_Boundry_Left(float k,int startX,int startY,int endY)
   Sample     K_Add_Boundry_Right(float k,int startY,int endY);
   @note      ²¹µÃÏßÖ±½ÓÌùÔÚ±ßÏßÉÏ
 -------------------------------------------------------------------------------------------------------------------*/
-void K_Add_Boundry_Right(float k,int startX,int startY,int endY)
+void K_Add_Boundry_Right(float k, int startX, int startY, int endY)
 {
-    int i,t;
-    if(startY>=MT9V03X_H-1)
-        startY=MT9V03X_H-1;
-    else if(startY<=0)
-        startY=0;
-    if(endY>=MT9V03X_H-1)
-        endY=MT9V03X_H-1;
-    else if(endY<=0)
-        endY=0;
-    if(startY<endY)
+    int i, t;
+    if (startY >= MT9V03X_H - 1)
+        startY = MT9V03X_H - 1;
+    else if (startY <= 0)
+        startY = 0;
+    if (endY >= MT9V03X_H - 1)
+        endY = MT9V03X_H - 1;
+    else if (endY <= 0)
+        endY = 0;
+    if (startY < endY)
     {
-        t=startY;
-        startY=endY;
-        endY=t;
+        t = startY;
+        startY = endY;
+        endY = t;
     }
-    for(i=startY;i>=endY;i--)
+    for (i = startY; i >= endY; i--)
     {
-        Right_Line[i]=(int)((i-startY)/k+startX);//(y-y1)=k(x-x1)±äÐÎ£¬x=(y-y1)/k+x1
-        if(Right_Line[i]>=MT9V03X_W-1)
+        Right_Line[i] = (int)((i - startY) / k + startX); //(y-y1)=k(x-x1)±äÐÎ£¬x=(y-y1)/k+x1
+        if (Right_Line[i] >= MT9V03X_W - 1)
         {
-            Right_Line[i]=MT9V03X_W-1;
+            Right_Line[i] = MT9V03X_W - 1;
         }
-        else if(Right_Line[i]<=0)
+        else if (Right_Line[i] <= 0)
         {
-            Right_Line[i]=0;
+            Right_Line[i] = 0;
         }
     }
 }
@@ -777,24 +770,24 @@ void K_Add_Boundry_Right(float k,int startX,int startY,int endY)
   Sample     K_Draw_Line(k, 20,MT9V03X_H-1 ,0)
   @note      ²¹µÄ¾ÍÊÇÒ»ÌõÏß£¬ÐèÒªÖØÐÂÉ¨Ïß
 -------------------------------------------------------------------------------------------------------------------*/
-void K_Draw_Line(float k, int startX, int startY,int endY)
+void K_Draw_Line(float k, int startX, int startY, int endY)
 {
-    int endX=0;
+    int endX = 0;
 
-    if(startX>=MT9V03X_W-1)//ÏÞ·ù´¦Àí
-        startX=MT9V03X_W-1;
-    else if(startX<=0)
-        startX=0;
-    if(startY>=MT9V03X_H-1)
-        startY=MT9V03X_H-1;
-    else if(startY<=0)
-        startY=0;
-    if(endY>=MT9V03X_H-1)
-        endY=MT9V03X_H-1;
-    else if(endY<=0)
-        endY=0;
-    endX=(int)((endY-startY)/k+startX);//(y-y1)=k(x-x1)±äÐÎ£¬x=(y-y1)/k+x1
-    Draw_Line(startX,startY,endX,endY);
+    if (startX >= MT9V03X_W - 1) // ÏÞ·ù´¦Àí
+        startX = MT9V03X_W - 1;
+    else if (startX <= 0)
+        startX = 0;
+    if (startY >= MT9V03X_H - 1)
+        startY = MT9V03X_H - 1;
+    else if (startY <= 0)
+        startY = 0;
+    if (endY >= MT9V03X_H - 1)
+        endY = MT9V03X_H - 1;
+    else if (endY <= 0)
+        endY = 0;
+    endX = (int)((endY - startY) / k + startX); //(y-y1)=k(x-x1)±äÐÎ£¬x=(y-y1)/k+x1
+    Draw_Line(startX, startY, endX, endY);
 }
 
 /*-------------------------------------------------------------------------------------------------------------------
@@ -804,29 +797,29 @@ void K_Draw_Line(float k, int startX, int startY,int endY)
   Sample     road_wide=Get_Road_Wide(68,69);
   @note      ++ÔËËã£¬ÏòÏÂÑ°ÕÒ£¬Ëã³öÆ½¾ùÈü¿í
 -------------------------------------------------------------------------------------------------------------------*/
-int Get_Road_Wide(int start_line,int end_line)
+int Get_Road_Wide(int start_line, int end_line)
 {
-    if(start_line>=MT9V03X_H-1)
-        start_line=MT9V03X_H-1;
-    else if(start_line<=0)
-        start_line=0;
-    if(end_line>=MT9V03X_H-1)
-        end_line=MT9V03X_H-1;
-    else if(end_line<=0)
-        end_line=0;
-    int i=0,t=0;
-    int road_wide=0;
-    if(start_line>end_line)//++·ÃÎÊ£¬×ø±ê·´ÁË»¥»»
+    if (start_line >= MT9V03X_H - 1)
+        start_line = MT9V03X_H - 1;
+    else if (start_line <= 0)
+        start_line = 0;
+    if (end_line >= MT9V03X_H - 1)
+        end_line = MT9V03X_H - 1;
+    else if (end_line <= 0)
+        end_line = 0;
+    int i = 0, t = 0;
+    int road_wide = 0;
+    if (start_line > end_line) //++·ÃÎÊ£¬×ø±ê·´ÁË»¥»»
     {
-        t=start_line;
-        start_line=end_line;
-        end_line=t;
+        t = start_line;
+        start_line = end_line;
+        end_line = t;
     }
-    for(i=start_line;i<=end_line;i++)
+    for (i = start_line; i <= end_line; i++)
     {
-        road_wide+=Right_Line[i]-Left_Line[i];
+        road_wide += Right_Line[i] - Left_Line[i];
     }
-    road_wide=road_wide/(end_line-start_line+1);//Æ½¾ùÈü¿í
+    road_wide = road_wide / (end_line - start_line + 1); // Æ½¾ùÈü¿í
     return road_wide;
 }
 
@@ -837,25 +830,25 @@ int Get_Road_Wide(int start_line,int end_line)
   Sample     k=Get_Left_K(68,69);
   @note      Á½µãÖ®¼äµÃ³öÐ±ÂÊ£¬Ä¬ÈÏµÚÒ»¸ö²ÎÊýÐ¡£¬µÚ¶þ¸ö²ÎÊý´ó
 -------------------------------------------------------------------------------------------------------------------*/
-float Get_Left_K(int start_line,int end_line)
+float Get_Left_K(int start_line, int end_line)
 {
-    if(start_line>=MT9V03X_H-1)
-        start_line=MT9V03X_H-1;
-    else if(start_line<=0)
-        start_line=0;
-    if(end_line>=MT9V03X_H-1)
-        end_line=MT9V03X_H-1;
-    else if(end_line<=0)
-        end_line=0;
-    float k=0;
-    int t=0;
-    if(start_line>end_line)//++·ÃÎÊ£¬×ø±ê·´ÁË»¥»»
+    if (start_line >= MT9V03X_H - 1)
+        start_line = MT9V03X_H - 1;
+    else if (start_line <= 0)
+        start_line = 0;
+    if (end_line >= MT9V03X_H - 1)
+        end_line = MT9V03X_H - 1;
+    else if (end_line <= 0)
+        end_line = 0;
+    float k = 0;
+    int t = 0;
+    if (start_line > end_line) //++·ÃÎÊ£¬×ø±ê·´ÁË»¥»»
     {
-        t=start_line;
-        start_line=end_line;
-        end_line=t;
+        t = start_line;
+        start_line = end_line;
+        end_line = t;
     }
-    k=(float)(((float)Left_Line[start_line]-(float)Left_Line[end_line])/(end_line-start_line+1));
+    k = (float)(((float)Left_Line[start_line] - (float)Left_Line[end_line]) / (end_line - start_line + 1));
     return k;
 }
 
@@ -866,26 +859,687 @@ float Get_Left_K(int start_line,int end_line)
   Sample     k=Get_Right_K(68,69);
   @note      Á½µãÖ®¼äµÃ³öÐ±ÂÊ£¬Ä¬ÈÏµÚÒ»¸ö²ÎÊýÐ¡£¬µÚ¶þ¸ö²ÎÊý´ó
 -------------------------------------------------------------------------------------------------------------------*/
-float Get_Right_K(int start_line,int end_line)
+float Get_Right_K(int start_line, int end_line)
 {
-    if(start_line>=MT9V03X_H-1)
-        start_line=MT9V03X_H-1;
-    else if(start_line<=0)
-        start_line=0;
-    if(end_line>=MT9V03X_H-1)
-        end_line=MT9V03X_H-1;
-    else if(end_line<=0)
-        end_line=0;
-    float k=0;
-    int t=0;
-    if(start_line>end_line)//++·ÃÎÊ£¬×ø±ê·´ÁË»¥»»
+    if (start_line >= MT9V03X_H - 1)
+        start_line = MT9V03X_H - 1;
+    else if (start_line <= 0)
+        start_line = 0;
+    if (end_line >= MT9V03X_H - 1)
+        end_line = MT9V03X_H - 1;
+    else if (end_line <= 0)
+        end_line = 0;
+    float k = 0;
+    int t = 0;
+    if (start_line > end_line) //++·ÃÎÊ£¬×ø±ê·´ÁË»¥»»
     {
-        t=start_line;
-        start_line=end_line;
-        end_line=t;
+        t = start_line;
+        start_line = end_line;
+        end_line = t;
     }
-    k=(float)(((float)Right_Line[start_line]-(float)Right_Line[end_line])/(end_line-start_line+1));
+    k = (float)(((float)Right_Line[start_line] - (float)Right_Line[end_line]) / (end_line - start_line + 1));
     return k;
+}
+
+
+
+/*==============================================================================================================
+******************************************************************************************************************
+==================================================================================================================*/
+
+
+
+uint8 left_down_point;//×óÏÂ¹Õµã
+uint8 left_up_point;//×óÉÏ¹Õµã
+uint8 right_down_point;//ÓÒÏÂ¹Õµã
+uint8 right_up_point;//ÓÒÉÏ¹Õµã
+uint8 circle_flag; //»·µº±êÖ¾Î»
+uint8 right_circle_flag; //ÓÒ»·µº±êÖ¾
+uint8 circle_once_time=0; //»·µº±êÖ¾Î»µ¥´Î´¥·¢
+const uint8 road_wide[MT9V03X_H]=
+{
+41,42,43,45,46,47,49,49,51,53,
+53,55,55,57,58,59,61,62,63,64,
+65,67,68,69,70,72,73,74,76,76,
+78,79,80,82,82,84,86,86,88,88,
+90,91,92,94,95,96,97,98,100,100,
+102,103,105,105,107,108,109,111,112,113,
+114,116,117,118,119,120,122,123,124,126,
+126,128,129,130,132,132,134,134,136,138,
+138,140,140,142,144,144,146,146,148,149,
+150,151,152,154,155,156,157,158,159,161,
+162,163,164,165,166,167,169,170,171,172,
+173,175,175,177,177,179,180,181,184,184
+};
+
+/**
+*
+* @brief  ×ó±ß½çÑÓ³¤
+* @param  start_point ÑÓ³¤Æðµã
+* @param  end_point   ÑÓ³¤ÖÕµã
+**/
+void lenthen_Left_Line(uint8 start_point,uint8 end_point)
+{
+    float k;
+    //·ÀÖ¹Ô½½ç
+    if(start_point>=MT9V03X_H-1)start_point=MT9V03X_H-1;
+    if(start_point<0)start_point=0;
+    if(end_point>=MT9V03X_H-1)end_point=MT9V03X_H-1;
+    if(end_point<0)end_point=0;
+    
+    if(end_point<start_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+
+    if(start_point<=5)//Æðµã¹ýÓÚ¿¿ÉÏ£¬Ö±½ÓÁ¬Ïß
+    {
+        Left_Add_Line(Left_Line[start_point],start_point,Left_Line[end_point],end_point);
+    }
+    else
+    {
+        k=(float)(Left_Line[start_point]-Left_Line[start_point-4])/5.0;//Ð±ÂÊ
+        for(uint8 i=start_point;i<=end_point;i++)
+        {
+            Left_Line[i]=Left_Line[start_point]+(int)(i-start_point)*k;//Ê¹ÓÃÐ±ÂÊÑÓ³¤
+
+            if(Left_Line[i]<1)//·ÀÖ¹Ô½½ç
+            {
+                Left_Line[i]=1;
+            }
+
+            if(Left_Line[i]>=MT9V03X_W-2)//·ÀÖ¹Ô½½ç
+            {
+                Left_Line[i]=MT9V03X_W-2;
+            }
+        }
+    }
+}
+
+
+/**
+* @brief  ×ó±ß½çÑÓ³¤£¨´ÓÏÂÍùÉÏ£©
+* @param  start_point ÑÓ³¤Æðµã£¨ÏÂ·½µã£©
+* @param  end_point   ÑÓ³¤ÖÕµã£¨ÉÏ·½µã£©
+**/
+void lenthen_Left_Line_up(uint8 start_point, uint8 end_point)
+{
+    float k;
+    // ·ÀÖ¹Ô½½ç
+    if (start_point >= MT9V03X_H - 1) start_point = MT9V03X_H - 1;
+    if (start_point < 0) start_point = 0;
+    if (end_point >= MT9V03X_H - 1) end_point = MT9V03X_H - 1;
+    if (end_point < 0) end_point = 0;
+
+    // È·±£Æðµã´óÓÚÖÕµã
+    if (start_point < end_point) {
+        uint8 t = start_point;
+        start_point = end_point;
+        end_point = t;
+    }
+
+    // Èç¹ûÆðµã¹ýÓÚ¿¿ÏÂ£¬Ö±½ÓÁ¬Ïß
+    if (start_point >= MT9V03X_H - 6) {
+        Left_Add_Line(Left_Line[start_point], start_point, Left_Line[end_point], end_point);
+    } else {
+        // ¼ÆËãÐ±ÂÊ
+        k = (float)(Left_Line[start_point] - Left_Line[start_point + 4]) / 5.0;
+        
+        // ´ÓÆðµãÏòÉÏÑÓ³¤
+        for (int16_t i = start_point; i >= end_point; i--) {
+            Left_Line[i] = Left_Line[start_point] + (int)((i - start_point) * (-k));// Ê¹ÓÃÐ±ÂÊÑÓ³¤(¸ºÐ±ÂÊ)
+            
+            // ·ÀÖ¹Ô½½ç
+            if (Left_Line[i] < 1) {
+                Left_Line[i] = 1;
+            }
+            if (Left_Line[i] >= MT9V03X_W - 2) {
+                Left_Line[i] = MT9V03X_W - 2;
+            }
+        }
+    }
+}
+
+
+
+/**
+*
+* @brief  ÓÒ±ß½çÑÓ³¤
+* @param  start_point ÑÓ³¤Æðµã
+* @param  end_point   ÑÓ³¤ÖÕµã
+**/
+void lenthen_Right_Line(uint8 start_point,uint8 end_point)
+{
+    float k;
+    //·ÀÖ¹Ô½½ç
+    if(start_point>=MT9V03X_H-1)start_point=MT9V03X_H-1;
+    if(start_point<0)start_point=0;
+    if(end_point>=MT9V03X_H-1)end_point=MT9V03X_H-1;
+    if(end_point<0)end_point=0;
+    
+    if(end_point<start_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+
+    if(start_point<=5)//Æðµã¹ýÓÚ¿¿ÉÏ£¬Ö±½ÓÁ¬Ïß
+    {
+        Left_Add_Line(Right_Line[start_point],start_point,Right_Line[end_point],end_point);
+    }
+    else
+    {
+        k=(float)(Right_Line[start_point]-Right_Line[start_point-4])/5.0;//Ð±ÂÊ
+        for(uint8 i=start_point;i<=end_point;i++)
+        {
+            Right_Line[i]=Right_Line[start_point]+(int)(i-start_point)*k;//Ê¹ÓÃÐ±ÂÊÑÓ³¤
+
+            if(Right_Line[i]<1)//·ÀÖ¹Ô½½ç
+            {
+                Right_Line[i]=1;
+            }
+            
+            if(Right_Line[i]>=MT9V03X_W-2)//·ÀÖ¹Ô½½ç
+            {
+                Right_Line[i]=MT9V03X_W-2;
+            }
+        }
+    }
+}
+
+/**
+*
+* @brief  µÀ¿í°ë±ß²¹×óÏß
+**/
+void road_wide_draw_Left_Line(void)
+{
+    for(int i=0;i<MT9V03X_H-1;i++)
+    {
+        Left_Line[i]=Right_Line[i]-road_wide[i];
+        if(Left_Line[i]<1)//·ÀÖ¹Ô½½ç
+        {
+            Left_Line[i]=1;
+        }
+    }
+}
+
+/**
+*
+* @brief  µÀ¿í°ë±ß²¹ÓÒÏß
+**/
+void road_wide_draw_Right_Line(void)
+{
+    for(int i=0;i<MT9V03X_H-1;i++)
+    {
+        Right_Line[i]=Left_Line[i]+road_wide[i];
+        if(Right_Line[i]>=MT9V03X_W-2)//·ÀÖ¹Ô½½ç
+        {
+            Right_Line[i]=MT9V03X_W-2;
+        }
+    }
+}
+
+
+/**
+*
+* @brief  ÕÒÏÂ¹Õµã
+* @param  start_point ËÑË÷Æðµã 
+* @param  end_point    ËÑË÷ÖÕµã
+**/
+
+void find_down_point(uint8 start_point,uint8 end_point)
+{
+    //²ÎÊýÇåÁã
+    left_down_point=0;
+    right_down_point=0;
+    if(start_point<end_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+    if(start_point>MT9V03X_H-5-1)
+    {
+        start_point=MT9V03X_H-5-1;
+    }
+    if(end_point<MT9V03X_H-Search_Stop_Line)
+    {
+        end_point=MT9V03X_H-Search_Stop_Line;
+    }
+    if(end_point<5)
+    {
+        end_point=5;
+    }
+    for(int i=start_point;i>=end_point;i--)
+    {
+        //µãiÏÂÃæ2¸öÁ¬ÐøÏà²î²»´ó²¢ÇÒµãiÓëÉÏÃæ±ß3¸öµã·Ö±ðÏà²îºÜ´ó£¬ÈÏÎªÓÐÏÂ×ó¹Õµã
+        if(left_down_point==0&&
+            abs(Left_Line[i]-Left_Line[i+1])<=7&&
+            abs(Left_Line[i+1]-Left_Line[i+2])<=7&&
+            abs(Left_Line[i+2]-Left_Line[i+3])<=7&&
+            (Left_Line[i]-Left_Line[i-2])>=8&&
+            (Left_Line[i]-Left_Line[i-3])>=8&&
+            (Left_Line[i]-Left_Line[i-4])>=8)
+            {
+                left_down_point=i+3;
+            }
+        if(right_down_point==0&&
+            abs(Right_Line[i]-Right_Line[i+1])<=6&&
+            abs(Right_Line[i+1]-Right_Line[i+2])<=6&&
+            abs(Right_Line[i+2]-Right_Line[i+3])<=6&&
+            (Right_Line[i]-Right_Line[i-2])<=-8&&
+            (Right_Line[i]-Right_Line[i-3])<=-8&&
+            (Right_Line[i]-Right_Line[i-4])<=-8)
+            {
+                right_down_point=i+3;
+            }
+        if(left_down_point!=0&&right_down_point!=0)
+        {
+            break;
+        }       
+    }
+}
+
+/**
+*
+* @brief  ÕÒÉÏ¹Õµã
+* @param  start_point ËÑË÷Æðµã 
+* @param  end_point    ËÑË÷ÖÕµã
+**/
+void find_up_point(uint8 start_point,uint8 end_point)
+{
+    left_up_point=0;
+    right_up_point=0;
+    if(start_point<end_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+
+    if(start_point>MT9V03X_H-5-1)
+    {
+        start_point=MT9V03X_H-5-1;
+    }
+
+    if(end_point<MT9V03X_H-Search_Stop_Line)
+    {
+        end_point=MT9V03X_H-Search_Stop_Line;
+    }
+
+    if(end_point<5)
+    {
+        end_point=5;
+    }
+
+    for(int i=start_point;i>=end_point;i--)
+    {
+        //µãiÏÂÃæ2¸öÁ¬ÐøÏà²î²»´ó²¢ÇÒµãiÓëÉÏÃæ±ß3¸öµã·Ö±ðÏà²îºÜ´ó£¬ÈÏÎªÓÐÉÏ×ó¹Õµã
+        if(left_up_point==0&&
+            abs(Left_Line[i]-Left_Line[i-1])<=5&&
+            abs(Left_Line[i-1]-Left_Line[i-2])<=5&&
+            abs(Left_Line[i-2]-Left_Line[i-3])<=5&&
+            (Left_Line[i]-Left_Line[i+2])>=8&&
+            (Left_Line[i]-Left_Line[i+3])>=15&&
+            (Left_Line[i]-Left_Line[i+4])>=15)
+            {
+                left_up_point=i-3;
+            }
+        if(right_up_point==0&&
+            abs(Right_Line[i]-Right_Line[i-1])<=3&&
+            abs(Right_Line[i-1]-Right_Line[i-2])<=3&&
+            abs(Right_Line[i-2]-Right_Line[i-3])<=3&&
+            (Right_Line[i]-Right_Line[i+2])<=-8&&
+            (Right_Line[i]-Right_Line[i+3])<=-15&&
+            (Right_Line[i]-Right_Line[i+4])<=-15)
+            {
+                right_up_point=i-3;
+            }
+        if(left_up_point!=0&&right_up_point!=0)
+        {
+            break;
+        }       
+    }
+}
+
+/**
+*
+* @brief  ÕÒÔ²»·ÓÒÉÏ¹Õµã
+* @param  start_point ËÑË÷Æðµã 
+* @param  end_point    ËÑË÷ÖÕµã
+**/
+void circle_right_up_point(uint8 start_point,uint8 end_point)
+{
+    right_up_point=0;
+    if(start_point<end_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+
+    if(start_point>MT9V03X_H-5-1)
+    {
+        start_point=MT9V03X_H-5-1;
+    }
+
+    if(end_point<5)
+    {
+        end_point=5;
+    }
+
+    for(int i=start_point;i>=end_point;i--)
+    {
+        if(right_up_point==0&&
+            abs(Right_Line[i]-Right_Line[i-1])<=5&&
+            abs(Right_Line[i-1]-Right_Line[i-2])<=5&&
+            abs(Right_Line[i-2]-Right_Line[i-3])<=5&&
+            (Right_Line[i]-Right_Line[i+2])<=-6&&
+            (Right_Line[i]-Right_Line[i+3])<=-8&&
+            (Right_Line[i]-Right_Line[i+4])<=-8)
+            {
+                right_up_point=i-3;
+            }
+        if(right_up_point!=0)
+        {
+            break;
+        }       
+    }
+}
+
+/**
+* @brief  ÕÒÔ²»·ÓÒÏÂ¹Õµã
+* @param  start_point ËÑË÷Æðµã
+* @param  end_point    ËÑË÷ÖÕµã
+**/
+void circle_right_down_point(uint8 start_point,uint8 end_point)
+{
+    //²ÎÊýÇåÁã
+    right_down_point=0;
+    if(start_point<end_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+    if(start_point>MT9V03X_H-5-1)
+    {
+        start_point=MT9V03X_H-5-1;
+    }
+    if(end_point<5)
+    {
+        end_point=5;
+    }
+    for(int i=start_point;i>=end_point;i--)
+    {
+        if(right_down_point==0&&
+            abs(Right_Line[i]-Right_Line[i+1])<=7&&
+            abs(Right_Line[i+1]-Right_Line[i+2])<=7&&
+            abs(Right_Line[i+2]-Right_Line[i+3])<=7&&
+            (Right_Line[i]-Right_Line[i-2])<=-5&&
+            (Right_Line[i]-Right_Line[i-3])<=-6&&
+            (Right_Line[i]-Right_Line[i-4])<=-6)
+            {
+                right_down_point=i+3;
+            }
+        if(right_down_point!=0)
+        {
+            break;
+        }       
+    }
+}
+
+/**
+* @brief  ÕÒÔ²»·×óÏÂ¹Õµã
+* @param  start_point ËÑË÷Æðµã
+* @param  end_point    ËÑË÷ÖÕµã
+**/
+void circle_left_down_point(uint8 start_point,uint8 end_point)
+{
+    //²ÎÊýÇåÁã
+    left_down_point=0;
+    if(start_point<end_point)
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+    if(start_point>MT9V03X_H-5-1)
+    {
+        start_point=MT9V03X_H-5-1;
+    }
+    if(end_point<5)
+    {
+        end_point=5;
+    }
+    for(int i=start_point;i>=end_point;i--)
+    {
+        if(right_down_point==0&&
+            abs(Right_Line[i]-Right_Line[i+1])<=7&&
+            abs(Right_Line[i+1]-Right_Line[i+2])<=7&&
+            abs(Right_Line[i+2]-Right_Line[i+3])<=7&&
+            (Right_Line[i]-Right_Line[i-2])>=8&&
+            (Right_Line[i]-Right_Line[i-3])>=10&&
+            (Right_Line[i]-Right_Line[i-4])>=10)
+            {
+                left_down_point=i+3;
+            }
+        if(left_down_point!=0)
+        {
+            break;
+        }       
+    }
+}
+
+
+/**
+*
+* @brief  ÅÐ¶Ï×ó±ß½çÁ¬ÐøÐÔ
+* @retval Á¬Ðø·µ»Ø0£¬²»Á¬Ðø·µ»Ø¶ÏÁÑµã
+**/
+uint8 left_countinuity_detect(uint8 start_point,uint8 end_point)
+{
+    uint8 continuity_line=0;//Á¬Ðø±êÖ¾
+
+    if(start_point<end_point)//´ÓÏÂÍùÉÏÉ¨
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+
+    if(Left_Lost_Time>MT9V03X_H*0.95)//Èç¹û×ó±ß¶ªÏß³¬¹ý95%£¬Ö±½Ó·µ»Ø1
+    {
+        return 1;
+    }
+
+    if(Search_Stop_Line<=5)//Èç¹ûËÑË÷½ØÖ¹ÐÐÐ¡ÓÚ5£¬Ö±½Ó·µ»Ø1
+    {
+        return 1;
+    }
+
+    if(start_point>MT9V03X_H-5)//·ÀÖ¹ÆðµãÔ½½ç
+    {
+        start_point=MT9V03X_H-5;
+    }
+
+    if(end_point<5)//·ÀÖ¹ÖÕµãÔ½½ç
+    {
+        end_point=5;
+    }
+
+    for(uint8 i=start_point;i>end_point;i--)
+    {
+        if(abs(Left_Line[i]-Left_Line[i-1])>=3)
+        {
+            continuity_line=i;//Èç¹ûµ±Ç°µãÓëÇ°Ò»¸öµãÏà²î´óÓÚ4£¬ÈÏÎª²»Á¬Ðø
+            break;
+        }
+    }
+    return continuity_line;//·µ»Ø¶ÏÁÑµã×ø±ê£¬Èç¹û·µ»Ø0£¬±íÊ¾Á¬Ðø
+}
+
+
+/**
+*
+* @brief  ÅÐ¶ÏÓÒ±ß½çÁ¬ÐøÐÔ
+* @retval Á¬Ðø·µ»Ø0£¬²»Á¬Ðø·µ»Ø¶ÏÁÑµã
+**/
+uint8 right_countinuity_detect(uint8 start_point,uint8 end_point)
+{
+    uint8 continuity_line=0;//Á¬Ðø±êÖ¾
+
+    if(start_point<end_point)//´ÓÏÂÍùÉÏÉ¨
+    {
+        uint8 t=start_point;
+        start_point=end_point;
+        end_point=t;
+    }
+
+    if(Right_Lost_Time>MT9V03X_H*0.95)//Èç¹ûÓÒ±ß¶ªÏß³¬¹ý95%£¬Ö±½Ó·µ»Ø1
+    {
+        return 1;
+    }
+
+    if(start_point>MT9V03X_H-5)//·ÀÖ¹ÆðµãÔ½½ç
+    {
+        start_point=MT9V03X_H-5;
+    }
+
+    if(end_point<5)//·ÀÖ¹ÖÕµãÔ½½ç
+    {
+        end_point=5;
+    }
+
+    for(uint8 i=start_point;i>end_point;i--)
+    {
+        if(abs(Right_Line[i]-Right_Line[i-1])>=3)
+        {
+            continuity_line=i;//Èç¹ûµ±Ç°µãÓëÇ°Ò»¸öµãÏà²î´óÓÚ4£¬ÈÏÎª²»Á¬Ðø
+            break;
+        }
+    }
+    return continuity_line;//·µ»Ø¶ÏÁÑµã×ø±ê£¬Èç¹û·µ»Ø0£¬±íÊ¾Á¬Ðø
+}
+
+
+
+
+
+/**
+*
+* @brief  ÕÒµ½×ó±ßµ¥µ÷ÐÔÍ»±äµã
+* @retval ¹Õµã×ø±ê
+**/
+uint8 find_left_change(uint8 start_point,uint8 end_point)
+{
+    uint8 left_change_line=0;//ÓÒ±ßÍ»±ä±êÖ¾
+
+    if(start_point<end_point)//´ÓÏÂÍùÉÏÉ¨
+    {
+        return left_change_line;//Èç¹ûÆðµãÐ¡ÓÚÖÕµã£¬Ö±½Ó·µ»Ø0
+    }
+
+    if(start_point>=MT9V03X_H-5)//·ÀÖ¹ÆðµãÔ½½ç
+    {
+        start_point=MT9V03X_H-5;
+    }
+
+    if(end_point<5)//·ÀÖ¹ÖÕµãÔ½½ç
+    {
+        end_point=5;
+    }
+
+    if(Right_Lost_Time>MT9V03X_H*0.95)
+    {
+        return left_change_line;//Èç¹ûÓÒ±ß¶ªÏß³¬¹ý95%£¬Ö±½Ó·µ»Ø0
+    }
+
+    for(uint8 i=start_point;i>end_point;i--)
+    {
+        if(abs(Left_Line[i]-Left_Line[i-5])<=10&&abs(Left_Line[i]-Left_Line[i+5])<=12)//Èç¹ûµ±Ç°µãÓëÇ°ºó5¸öµãÏà²îÐ¡ÓÚ10
+        {
+            if(Left_Line[i]==Left_Line[i-5]&&Left_Line[i]==Left_Line[i+5]&&
+            Left_Line[i]==Left_Line[i-4]&&Left_Line[i]==Left_Line[i+4]&&
+            Left_Line[i]==Left_Line[i-3]&&Left_Line[i]==Left_Line[i+3]&&
+            Left_Line[i]==Left_Line[i-2]&&Left_Line[i]==Left_Line[i+2]&&
+            Left_Line[i]==Left_Line[i-1]&&Left_Line[i]==Left_Line[i+1])
+            {
+                continue;//Èç¹ûµ±Ç°µãÓëÇ°ºó5¸öµãÏàµÈ£¬¼ÌÐø
+            }
+        else if(Left_Line[i]>=Left_Line[i-5]&&Left_Line[i]>=Left_Line[i+5]&&
+                Left_Line[i]>=Left_Line[i-4]&&Left_Line[i]>=Left_Line[i+4]&&
+                Left_Line[i]>=Left_Line[i-3]&&Left_Line[i]>=Left_Line[i+3]&&
+                Left_Line[i]>=Left_Line[i-2]&&Left_Line[i]>=Left_Line[i+2]&&
+                Left_Line[i]>=Left_Line[i-1]&&Left_Line[i]>=Left_Line[i+1])
+            {
+                left_change_line=i;//Èç¹ûµ±Ç°µã´óÓÚÇ°ºó5¸öµã£¬ÈÏÎªÊÇÍ»±äµã
+                break;
+            }
+        }
+    }
+    return left_change_line;//·µ»ØÍ»±äµã×ø±ê
+}
+
+
+
+/**
+*
+* @brief  ÕÒµ½ÓÒ±ßµ¥µ÷ÐÔÍ»±äµã
+* @retval ¹Õµã×ø±ê
+**/
+uint8 find_right_change(uint8 start_point,uint8 end_point)
+{
+    uint8 right_change_line=0;//ÓÒ±ßÍ»±ä±êÖ¾
+
+    if(start_point<end_point)//´ÓÏÂÍùÉÏÉ¨
+    {
+        return right_change_line;//Èç¹ûÆðµãÐ¡ÓÚÖÕµã£¬Ö±½Ó·µ»Ø0
+    }
+
+    if(start_point>=MT9V03X_H-5)//·ÀÖ¹ÆðµãÔ½½ç
+    {
+        start_point=MT9V03X_H-5;
+    }
+
+    if(end_point<5)//·ÀÖ¹ÖÕµãÔ½½ç
+    {
+        end_point=5;
+    }
+
+    if(Right_Lost_Time>MT9V03X_H*0.95)
+    {
+        return right_change_line;//Èç¹ûÓÒ±ß¶ªÏß³¬¹ý95%£¬Ö±½Ó·µ»Ø0
+    }
+
+    for(uint8 i=start_point;i>end_point;i--)
+    {
+        if(abs(Right_Line[i]-Right_Line[i-5])<=10&&abs(Right_Line[i]-Right_Line[i+5])<=14)//Èç¹ûµ±Ç°µãÓëÇ°ºó5¸öµãÏà²îÐ¡ÓÚ10
+        {
+            if(Right_Line[i]==Right_Line[i-5]&&Right_Line[i]==Right_Line[i+5]&&
+            Right_Line[i]==Right_Line[i-4]&&Right_Line[i]==Right_Line[i+4]&&
+            Right_Line[i]==Right_Line[i-3]&&Right_Line[i]==Right_Line[i+3]&&
+            Right_Line[i]==Right_Line[i-2]&&Right_Line[i]==Right_Line[i+2]&&
+            Right_Line[i]==Right_Line[i-1]&&Right_Line[i]==Right_Line[i+1])
+            {
+                continue;//Èç¹ûµ±Ç°µãÓëÇ°ºó5¸öµãÏàµÈ£¬¼ÌÐø
+            }
+            else if(Right_Line[i]<=Right_Line[i-5]&&Right_Line[i]<=Right_Line[i+5]&&
+                    Right_Line[i]<=Right_Line[i-4]&&Right_Line[i]<=Right_Line[i+4]&&
+                    Right_Line[i]<=Right_Line[i-3]&&Right_Line[i]<=Right_Line[i+3]&&
+                    Right_Line[i]<=Right_Line[i-2]&&Right_Line[i]<=Right_Line[i+2]&&
+                    Right_Line[i]<=Right_Line[i-1]&&Right_Line[i]<=Right_Line[i+1])
+            {
+                right_change_line=i;//Èç¹ûµ±Ç°µã´óÓÚÇ°ºó5¸öµã£¬ÈÏÎªÊÇÍ»±äµã
+                break;
+            }
+        }
+    }
+
+    return right_change_line;//·µ»ØÍ»±äµã×ø±ê
 }
 
 
@@ -894,9 +1548,171 @@ float Get_Right_K(int start_line,int end_line)
 
 
 
+//ÓÒ»·µº´¦ÀíÖÐ¼ä±äÁ¿
+uint8 continuity_left_change_flag=0;//×ó±ßÁ¬Ðø±ä»¯±êÖ¾
+uint8 continuity_right_change_flag=0;//ÓÒ±ßÁ¬Ðø±ä»¯±êÖ¾
+uint8 left_change_line=0;//×ó±ßÍ»±äµã
+uint8 right_change_line=0;//ÓÒ±ßÍ»±äµã
+int16 encoder_sum;//Ô²»·×´Ì¬±àÂëÆ÷¼ÆÊý
 
+/**
+*
+* @brief  ÅÐ¶Ï»·µº×´Ì¬²¢²¹Ïß
+**/
+void circle_judge(void)
+{
+    
+    continuity_left_change_flag=0;//×ó±ßÁ¬Ðø±ä»¯±êÖ¾
+    continuity_right_change_flag=0;//ÓÒ±ßÁ¬Ðø±ä»¯±êÖ¾
+    left_change_line=0;//×ó±ßÍ»±äµã
+    right_change_line=0;//ÓÒ±ßÍ»±äµã
 
+    if(Cross_Flag==0)//±Ü¿ªÊ®×Ö
+    {
+        continuity_left_change_flag=left_countinuity_detect(MT9V03X_H-1-60,15);//ÅÐ¶Ï×ó±ßÁ¬ÐøÐÔ
+        continuity_right_change_flag=right_countinuity_detect(MT9V03X_H-1-15,15);//ÅÐ¶ÏÓÒ±ßÁ¬ÐøÐÔ
+        left_change_line=find_left_change(MT9V03X_H-1-40,15);//Ñ°ÕÒ×ó±ßÍ»±äµã
+        right_change_line=find_right_change(MT9V03X_H-1-5,5);//Ñ°ÕÒÓÒ±ßÍ»±äµã
+			
+        find_down_point(MT9V03X_H-20,60);//Ñ°ÕÒÏÂ¹Õµã
+        circle_right_down_point(MT9V03X_H-5,80);//Ñ°ÕÒÓÒÏÂ¹Õµã
+        find_up_point(MT9V03X_H-5,10);//Ñ°ÕÒÉÏ¹Õµã
+			
+        if(right_circle_flag==0)//´¦ÀíÓÒÔ²»·
+        {
+            if(continuity_left_change_flag<=30&&
+            continuity_right_change_flag!=0&&
+            Right_Lost_Time>=10&&Right_Lost_Time<=100&&
+						Left_Lost_Time<=10&&
+            Boundry_Start_Left>=MT9V03X_H-8&&
+            Boundry_Start_Right>=MT9V03X_H-8&&
+            Search_Stop_Line>=100&&
+            right_down_point
+            )
+            {
+                if(car_run&&circle_flag==0&&right_circle_flag==0)//Èç¹û³µÔÚÐÐÊ»ÖÐ
+                {
+                    buzzer_on(50);//·äÃùÆ÷Ïì
+                }
+								
+                right_circle_flag=1;//ÓÒÔ²»·±êÖ¾ÖÃ1
+                circle_flag=1;//»·µº±êÖ¾ÖÃ1
+								
+                turn_start =60;
+								turn_end=65;
+            }
+            else
+            {
+                right_circle_flag=0;//ÓÒÔ²»·±êÖ¾ÖÃ0
+                circle_flag=0;//»·µº±êÖ¾ÖÃ0
+            }
+        }
+				
+        else if(circle_flag==1)
+        {
+            if(right_circle_flag==1)
+            {    
+                road_wide_draw_Right_Line();//ÓÒ±ßµÀ¿í²¹Ïß
+                if(right_change_line>60&&right_up_point)//ÓÒ±ßÍ»µã×ø±ê¹ý´ó²¢ÇÒÓÐÓÒÉÏ¹Õµã
+                {
+                    right_circle_flag=2;//ÓÒÔ²»·±êÖ¾ÖÃ2
+                    if(car_run)
+                    {
+                        buzzer_on(50);//·äÃùÆ÷Ïì
+                    }
+                }
+            }
+            else if(right_circle_flag==2)
+            {
+								
+                circle_right_up_point(MT9V03X_H-10,10);//Ñ°ÕÒÓÒÉÏ¹Õµã
+                if(right_up_point)
+                {
+                    Left_Add_Line(Right_Line[right_up_point],right_up_point,Left_Line[ Boundry_Start_Left], Boundry_Start_Left);//×ó±ß²¹Ïß
+                }
+                else
+                {
+                    road_wide_draw_Left_Line();//×ó±ßµÀ¿í²¹Ïß
+										
+                }
+								Longest_White_Column();
+								//turn_offset=turn_offset>-20?-20:turn_offset;
+								//printf("%d",turn_offset);
+                if(encoder_sum>=17000)
+                {
+                    right_circle_flag=3;
+                    turn_start=57;
+										turn_end =62;
+                    if(car_run)
+                    {
+                        buzzer_on(50);//·äÃùÆ÷Ïì
+                    }
+                    encoder_sum=0;//±àÂëÆ÷»ý·ÖÇåÁã
+                }
 
-
-
-
+            }
+            else if(right_circle_flag==3)
+            {
+                if(left_down_point>=3)
+                {
+                    right_circle_flag=4;//ÓÒÔ²»·±êÖ¾ÖÃ4
+//                    if(car_run)
+//                    {
+//                        buzzer_on(50);//·äÃùÆ÷Ïì
+//                    }
+                }
+            }
+            else if(right_circle_flag==4)
+            {
+                find_down_point(MT9V03X_H-10,10);//Ñ°ÕÒÏÂ¹Õµã
+                lenthen_Left_Line_up(left_down_point,0);
+                if(left_down_point>50)
+                {
+                    right_circle_flag=5;//ÓÒÔ²»·±êÖ¾ÖÃ0
+//                    if(car_run)
+//                    {
+//                        buzzer_on(50);//·äÃùÆ÷Ïì
+//                    }
+                }
+            }
+            else if(right_circle_flag==5)
+            {
+                if(right_up_point)
+                {
+                    right_circle_flag=6;
+//                    if(car_run)
+//                    {
+//                        buzzer_on(50);//·äÃùÆ÷Ïì
+//                    }
+                }
+                else
+                {
+                    road_wide_draw_Left_Line();//×ó±ßµÀ¿í²¹Ïß
+                }
+            }
+            else if(right_circle_flag==6)
+            {
+                find_up_point(MT9V03X_H-5,5);//Ñ°ÕÒÉÏ¹Õµã
+                if(right_up_point)
+                {
+                    lenthen_Right_Line(right_up_point,MT9V03X_H-1);//ÓÒ±ßÑÓ³¤
+                }
+                else
+                {
+                    road_wide_draw_Right_Line();//ÓÒ±ßµÀ¿í²¹Ïß
+                }
+                if(right_up_point==0)
+                {
+                    circle_flag=0;//»·µº±êÖ¾ÖÃ0
+                    right_circle_flag=0;//ÓÒÔ²»·±êÖ¾ÖÃ0
+                    encoder_sum=0;//±àÂëÆ÷»ý·ÖÇåÁã
+                    circle_once_time=1;//»·µºÒ»´Î±êÖ¾ÖÃ1
+//                    if(car_run)
+//                    {
+//                        buzzer_on(50);//·äÃùÆ÷Ïì
+//                    }
+                }
+            }
+        }
+    }
+}

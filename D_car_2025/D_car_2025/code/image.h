@@ -3,8 +3,16 @@
 
 #include "zf_common_typedef.h"
 #include "zf_common_headfile.h"
-#define TURN_STANDARD_START 20 // 前瞻
-#define TURN_STANDARD_END 25   // 前瞻
+#define TURN_STANDARD_START turn_start // 前瞻
+#define TURN_STANDARD_END turn_end	   // 前瞻
+
+extern uint16 turn_start;
+extern uint16 turn_end;
+extern volatile int Cross_Flag ;// 十字
+extern volatile int Island_State; // 环岛状态标志
+extern volatile int Ramp_Flag;    // 坡道
+
+
 
 extern volatile int Left_Line[MT9V03X_H];  // 左边线数组
 extern volatile int Right_Line[MT9V03X_H]; // 右边线数组

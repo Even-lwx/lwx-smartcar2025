@@ -25,4 +25,9 @@ void pit_encoder_handler(void)
 
     Encoder_Right = -encoder_get_count(ENCODER_2); // 获取编码器计数
     encoder_clear_count(ENCODER_2);               // 清空编码器计数
+	
+	    if(right_circle_flag == 2||right_circle_flag==6)
+    {
+      encoder_sum += (Encoder_Left+Encoder_Right);
+    }
 }

@@ -686,11 +686,11 @@ void fun_menu()
 void handle_image_display()
 {
 	//绘制参考定位线
-	ips200_draw_line ( MT9V03X_W/2, 0, MT9V03X_W/2, MT9V03X_H, RGB565_RED);
+	ips200_draw_line ( MT9V03X_W/2, 0, MT9V03X_W/2, MT9V03X_H,RGB565_YELLOW);
 
 	
-	ips200_draw_line ( 0,  TURN_STANDARD_START, MT9V03X_W, TURN_STANDARD_START, RGB565_RED);
-	ips200_draw_line ( 0,  TURN_STANDARD_END, MT9V03X_W, TURN_STANDARD_END, RGB565_RED);
+	ips200_draw_line ( 0,  TURN_STANDARD_START, MT9V03X_W, TURN_STANDARD_START, RGB565_YELLOW);
+	ips200_draw_line ( 0,  TURN_STANDARD_END, MT9V03X_W, TURN_STANDARD_END, RGB565_YELLOW);
 
 	if (image_proess)
     {
@@ -709,14 +709,21 @@ void handle_image_display()
 				for (int i = MT9V03X_H - 1; i >= MT9V03X_H - Search_Stop_Line; i--) // 从最底下往上扫描
     {
         // 左右边界使用黄色
-        ips200_draw_point(Left_Line[i] + 1, i, RGB565_YELLOW);
-        ips200_draw_point(Right_Line[i] - 1, i, RGB565_YELLOW);
+        ips200_draw_point(Left_Line[i] + 1, i, RGB565_RED);
+        ips200_draw_point(Right_Line[i] - 1, i, RGB565_RED);
         // 中线使用蓝色
         ips200_draw_point((Left_Line[i] + Right_Line[i]) >> 1, i,RGB565_BLUE);
     }
 				//显示最长白列
 				ips200_draw_line (  Longest_White_Column_Left[1], 0, Longest_White_Column_Left[1], MT9V03X_H, RGB565_GREEN);
 				ips200_draw_line ( Longest_White_Column_Right[1], 0, Longest_White_Column_Right[1], MT9V03X_H, RGB565_GREEN);
+		ips200_show_string(30, 130, "Cross_Flag");
+		ips200_show_int(140,130,Cross_Flag,2);
+		ips200_show_string(30, 160, "right_circle");
+		ips200_show_int(140,160, right_circle_flag,2);
+		ips200_show_string(30, 190, "Ramp_Flag");
+		ips200_show_int(140,190,Ramp_Flag,2);
+		
 			image_proess=0;
 			}
         // 显示退出提示

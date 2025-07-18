@@ -40,6 +40,10 @@ extern volatile int Ramp_Flag;    // 坡道
 // 坡道
 volatile int Ramp_Flag = 0; // 坡道标志
 
+
+
+uint16 turn_start=51;
+uint16 turn_end=55;
 /*-------------------------------------------------------------------------------------------------------------------
   @brief     双最长白列巡线
   @param     null
@@ -75,6 +79,18 @@ void Longest_White_Column() // 最长白列巡线
     {
         White_Column[i] = 0;
     }
+		
+		//环岛需要对最长白列范围进行限定，环岛3状态找不到上角点，可以修改下述参数
+    //环岛2状态需要改变最长白列寻找范围
+    if(circle_flag)//右环
+    {
+        if(right_circle_flag==2)
+        {
+            start_column=110;
+            end_column=MT9V03X_W-20;
+        }
+    }
+   
 
     // 从左到右，从下往上，遍历全图记录范围内的每一列白点数量
     for (j = start_column; j <= end_column; j++)
@@ -749,7 +765,7 @@ uint8 image_out_of_bounds(uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH])
     {
         for (int j = 0; j < 3; j++)
         {
-            sum += image_copy[IMAGE_HEIGHT - j][IMAGE_WIDTH / 2 - 5 + i];
+            sum += image_copy[IMAGE_HEIGHT - 1-j][IMAGE_WIDTH / 2 - 5 + i];
         }
     }
     int average = sum / 30; // 计算平均值

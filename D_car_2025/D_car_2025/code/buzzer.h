@@ -1,10 +1,10 @@
 #ifndef _BUZZER_H
 #define _BUZZER_H
-
+#include "zf_common_typedef.h"
 
 void buzzer_init();
-void buzzer_on();
-void buzzer_off();
+void buzzer_on(uint8 tim);
+
 
 
 

@@ -84,18 +84,17 @@ void Limit(int* motor1, int* motor2)
 void motor_protect(int* motor1,int* motor2)
 {
 
-	if(abs(Encoder_Left)>SPEED_PROTECT||abs(Encoder_Right)>SPEED_PROTECT||image_out_of_bounds(binaryImage))//||abs(Encoder_Left-Encoder_Right)>TURN_PPROTECT
+	if(car_run==1&&(abs(Encoder_Left)>SPEED_PROTECT||abs(Encoder_Right)>SPEED_PROTECT||image_out_of_bounds(binaryImage)))//||abs(Encoder_Left-Encoder_Right)>TURN_PPROTECT
 	{
 			car_run=0;
-			buzzer_on();                                          
-			system_delay_ms(100);
-			buzzer_off();
-			system_delay_ms(100);
+			buzzer_on(100);                                          
+		
 			Load(0,0);
 
 	}
 	if(Zebra_Detect())
 	{
+		printf("%d",system_count);
 		car_run=0;
 		Load(0,0);
 	}

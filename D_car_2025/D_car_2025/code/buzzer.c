@@ -8,7 +8,7 @@ void buzzer_init()
 }
 
 
-void buzzer_on(uint8 tim)
+void buzzer_on(uint16 tim)
 {
 	gpio_set_level(D7, GPIO_HIGH);
 	system_delay_ms(tim);	

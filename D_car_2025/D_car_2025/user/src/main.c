@@ -48,7 +48,8 @@
 #define CONTROL_PIT (TIM6_PIT)
 #define CONTROL_IRQn (TIM6_IRQn)
 
-uint32 system_count = 0,system_lastcount=0;
+uint32 system_count = 0, system_lastcount = 0, system_lastcount_zebra;
+uint8 count;
 int threshold;
 int image_proess = 0; // 图像处理完成标志位
 
@@ -72,7 +73,7 @@ void all_init(void)
 
 	ips200_clear();
 	buzzer_on(100);
-	
+
 	pit_ms_init(TIM2_PIT, 10);
 	interrupt_set_priority(TIM2_IRQn, 1); // 菜单的中断
 }
@@ -84,24 +85,48 @@ int main(void)
 	while (1)
 	{
 
-	
-			/*图像处理*/
+		/*图像处理*/
 		memcpy(image_copy, mt9v03x_image, MT9V03X_H * MT9V03X_W); // 拷贝图像数据
 		if (system_count % 3 == 0)								  // 间隔3次算一次阈值
 		{
 			threshold = otsu_get_threshold(image_copy, MT9V03X_W, MT9V03X_H); // 图像获取阈值
 		}
 		applyThreshold(image_copy, binaryImage, threshold); // 应用阈值生成二值化图像
-		
+
 		Longest_White_Column();
 		Cross_Detect();
 		circle_judge();
 		turn_offset = err_sum_average(TURN_STANDARD_START, TURN_STANDARD_END); // 转向偏差（左正右负）
-		if(right_circle_flag==2)
+																			   //		if(right_circle_flag==2)
+																			   //		{
+																			   //			turn_offset =turn_offset >-25?-25:turn_offset;
+																			   //		}
+
+		if (Zebra_Detect())
 		{
-			turn_offset =turn_offset >-25?-25:turn_offset;
+			count++;
+			if (count >= 5) // 连续5帧检测到算是
+			{
+
+				zebra_count++;
+			}
+
+			// system_lastcount_zebra=system_count;
+			// if(system_count-system_lastcount_zebra>1000)
+			// {
+
+			// 	zebra_count++;
+			// }
+			if (zebra_count >= zebracount)
+			{
+				car_run = 0;
+				Load(0, 0);
+			}
 		}
-		
+		else
+		{
+			count = 0;
+		}
 		system_count++;
 		image_proess = 1;
 
@@ -109,17 +134,17 @@ int main(void)
 		//  printf("ENCODER_Left counter \t%d .\r\n", Encoder_Left);                 // 输出编码器计数信息
 		// printf("ENCODER_Right counter \t%d .\r\n", Encoder_Right);                 // 输出编码器计数信息
 
-		//printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
+		// printf("%d,%d,%d,%d,%d,%d\r\n", gx, gy, gz, ax, ay, az);
 		//	printf("%d\r\n",gz);
 		//	printf("%d,%d,%.2f\r\n",gx,ay,filtering_angle );
-	//	printf("%2f\r\n",filtering_angle);
+		//	printf("%2f\r\n",filtering_angle);
 
-//		if(car_run)
-//		{
-//		printf("%d,%d,%d\r\n",Encoder_Left,Encoder_Right,gz);
-//		}		
-//for(int i=0;i<Search_Stop_Line;i++)
-//		{printf("%d,%d\r\n",i,Right_Line[i]-Left_Line[i]);}
+		//		if(car_run)
+		//		{
+		//		printf("%d,%d,%d\r\n",Encoder_Left,Encoder_Right,gz);
+		//		}
+		// for(int i=0;i<Search_Stop_Line;i++)
+		//		{printf("%d,%d\r\n",i,Right_Line[i]-Left_Line[i]);}
 		//		system_delay_ms(20);
 	}
 }

@@ -1593,7 +1593,9 @@ void circle_judge(void)
                 if(car_run&&circle_flag==0&&right_circle_flag==0)//如果车在行驶中
                 {
                     buzzer_on(50);//蜂鸣器响
+									
                 }
+								
 								
                 right_circle_flag=1;//右圆环标志置1
                 circle_flag=1;//环岛标志置1
@@ -1613,7 +1615,7 @@ void circle_judge(void)
             if(right_circle_flag==1)
             {    
                 road_wide_draw_Right_Line();//右边道宽补线
-                if(right_change_line>60&&right_up_point)//右边突点坐标过大并且有右上拐点
+                if(right_change_line>50&&right_up_point)//右边突点坐标过大并且有右上拐点
                 {
                     right_circle_flag=2;//右圆环标志置2
                     if(car_run)
@@ -1626,19 +1628,20 @@ void circle_judge(void)
             {
 								
                 circle_right_up_point(MT9V03X_H-10,10);//寻找右上拐点
-                if(right_up_point)
-                {
-                    Left_Add_Line(Right_Line[right_up_point],right_up_point,Left_Line[ Boundry_Start_Left], Boundry_Start_Left);//左边补线
-                }
-                else
-                {
-                    road_wide_draw_Left_Line();//左边道宽补线
-										
-                }
-								Longest_White_Column();
-								//turn_offset=turn_offset>-20?-20:turn_offset;
-								//printf("%d",turn_offset);
-                if(encoder_sum>=17000)
+//                if(right_up_point)
+//                {
+//                    Left_Add_Line(Right_Line[right_up_point],right_up_point,Left_Line[ Boundry_Start_Left], Boundry_Start_Left);//左边补线
+//                }
+//                else
+//                {
+//                    road_wide_draw_Left_Line();//左边道宽补线
+//										
+//                }
+							
+							 road_wide_draw_Left_Line();//左边道宽补线
+							
+							
+                if(encoder_sum>=18000)
                 {
                     right_circle_flag=3;
                     turn_start=57;

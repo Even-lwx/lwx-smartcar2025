@@ -12,11 +12,11 @@ int turn_offset, turn_offset_last;
 float Med_Angle = 0; // 平衡时角度值偏移量（机械中值）
 // PID参数
 float Gyro_Kp = -1.05, Gyro_Ki = -0.455;
-float Vertical_Kp = -2.3, Vertical_Kd = -0.1;				 // 直立环
+float Vertical_Kp = -2.3, Vertical_Kd = -0.1; // 直立环
 /*以下是菜单调参*/
-int  Target_Speed = 125;
-float Velocity_Kp = -23, Velocity_Ki = -0;					 // 速度环
-float Turn_kp1=0.2, Turn_kp2 = 0.635, Turn_kd1, Turn_kd2 = -0.51; // ppdd转向环
+int Target_Speed = 138;
+float Velocity_Kp = -21.2, Velocity_Ki = -0;					   // 速度环
+float Turn_kp1 = 3.0, Turn_kp2 = 0.89, Turn_kd1, Turn_kd2 = -0.65; // ppdd转向环
 /*===============================================================*/
 uint32 pid_count = 0;
 uint8_t stop;

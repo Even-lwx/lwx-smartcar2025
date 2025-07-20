@@ -685,52 +685,47 @@ void fun_menu()
 // 图像显示处理
 void handle_image_display()
 {
-	//绘制参考定位线
-	ips200_draw_line ( MT9V03X_W/2, 0, MT9V03X_W/2, MT9V03X_H,RGB565_YELLOW);
+    // 绘制参考定位线
+    ips200_draw_line(MT9V03X_W / 2, 0, MT9V03X_W / 2, MT9V03X_H, RGB565_YELLOW);
 
-	
-	ips200_draw_line ( 0,  TURN_STANDARD_START, MT9V03X_W, TURN_STANDARD_START, RGB565_YELLOW);
-	ips200_draw_line ( 0,  TURN_STANDARD_END, MT9V03X_W, TURN_STANDARD_END, RGB565_YELLOW);
+    ips200_draw_line(0, TURN_STANDARD_START, MT9V03X_W, TURN_STANDARD_START, RGB565_YELLOW);
+    ips200_draw_line(0, TURN_STANDARD_END, MT9V03X_W, TURN_STANDARD_END, RGB565_YELLOW);
 
-	if (image_proess)
+    if (image_proess)
     {
-			
-     
-//        // 显示原始图像
-//        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
-//                               MT9V03X_W, MT9V03X_H,
-//                               MT9V03X_W, MT9V03X_H, 0);
+
+        //        // 显示原始图像
+        //        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
+        //                               MT9V03X_W, MT9V03X_H,
+        //                               MT9V03X_W, MT9V03X_H, 0);
 
         // 显示处理后的二值化图像
         ips200_show_gray_image(0, 0, (const uint8 *)binaryImage,
                                MT9V03X_W, MT9V03X_H,
                                MT9V03X_W, MT9V03X_H, 0);
-				//显示边界和中线图像
-				for (int i = MT9V03X_H - 1; i >= MT9V03X_H - Search_Stop_Line; i--) // 从最底下往上扫描
-    {
-        // 左右边界使用黄色
-        ips200_draw_point(Left_Line[i] + 1, i, RGB565_RED);
-        ips200_draw_point(Right_Line[i] - 1, i, RGB565_RED);
-        // 中线使用蓝色
-        ips200_draw_point((Left_Line[i] + Right_Line[i]) >> 1, i,RGB565_BLUE);
-    }
-				//显示最长白列
-				ips200_draw_line (  Longest_White_Column_Left[1], 0, Longest_White_Column_Left[1], MT9V03X_H, RGB565_GREEN);
-				ips200_draw_line ( Longest_White_Column_Right[1], 0, Longest_White_Column_Right[1], MT9V03X_H, RGB565_GREEN);
-		ips200_show_string(30, 130, "Cross_Flag");
-		ips200_show_int(140,130,Cross_Flag,2);
-		ips200_show_string(30, 160, "right_circle");
-		ips200_show_int(140,160, right_circle_flag,2);
-		ips200_show_string(30, 190, "Ramp_Flag");
-		ips200_show_int(140,190,Ramp_Flag,2);
-		
-			image_proess=0;
-			}
-        // 显示退出提示
-        ips200_show_string(10, 240, "Press BACK to exit");
+        // 显示边界和中线图像
+        for (int i = MT9V03X_H - 1; i >= MT9V03X_H - Search_Stop_Line; i--) // 从最底下往上扫描
+        {
+            // 左右边界使用黄色
+            ips200_draw_point(Left_Line[i] + 1, i, RGB565_RED);
+            ips200_draw_point(Right_Line[i] - 1, i, RGB565_RED);
+            // 中线使用蓝色
+            ips200_draw_point((Left_Line[i] + Right_Line[i]) >> 1, i, RGB565_BLUE);
+        }
+        // 显示最长白列
+        ips200_draw_line(Longest_White_Column_Left[1], 0, Longest_White_Column_Left[1], MT9V03X_H, RGB565_GREEN);
+        ips200_draw_line(Longest_White_Column_Right[1], 0, Longest_White_Column_Right[1], MT9V03X_H, RGB565_GREEN);
+        ips200_show_string(30, 130, "Cross_Flag");
+        ips200_show_int(140, 130, Cross_Flag, 2);
+        ips200_show_string(30, 160, "right_circle");
+        ips200_show_int(140, 160, right_circle_flag, 2);
+        ips200_show_string(30, 190, "Ramp_Flag");
+        ips200_show_int(140, 190, Ramp_Flag, 2);
 
-			
-    
+        image_proess = 0;
+    }
+    // 显示退出提示
+    ips200_show_string(10, 240, "Press BACK to exit");
 
     // 检测返回键
     if (button1)
@@ -738,9 +733,7 @@ void handle_image_display()
         display_mode = 0;  // 退出图像模式
         is_clear_flag = 1; // 设置清屏标志
         assist_menu();     // 刷新菜单显示
-			
     }
-	
 }
 
 // 传感器参数显示处理
@@ -753,17 +746,17 @@ void handle_sensor_display()
     ips200_show_string(10, 10, "Sensor Parameters");
     ips200_draw_line(10, 30, 230, 30, RGB565_BLUE);
     ips200_show_string(0, 50, "roll:");
-		//ips200_show_string(0, 70, "pitch:");
-    //ips200_show_string(0, 90, "yaw:");
-		ips200_show_string(0, 70, "Left:");
+    // ips200_show_string(0, 70, "pitch:");
+    // ips200_show_string(0, 90, "yaw:");
+    ips200_show_string(0, 70, "Left:");
     ips200_show_string(0, 90, "Right:");
-		ips200_show_float(90, 50, filtering_angle, 4, 4);
-    //ips200_show_float(60, 70, pitch, 4, 4);
-    //ips200_show_float(60, 90, yaw, 4, 4);
-		ips200_show_float(90,70,Encoder_Left,4,4);
-	  ips200_show_float(90,90,Encoder_Right,4,4);
-	
-		ips200_show_float(90,110,imu963ra_gyro_z,4,4);
+    ips200_show_float(90, 50, filtering_angle, 4, 4);
+    // ips200_show_float(60, 70, pitch, 4, 4);
+    // ips200_show_float(60, 90, yaw, 4, 4);
+    ips200_show_float(90, 70, Encoder_Left, 4, 4);
+    ips200_show_float(90, 90, Encoder_Right, 4, 4);
+
+    ips200_show_float(90, 110, imu963ra_gyro_z, 4, 4);
     // 显示退出提示
     ips200_show_string(10, 240, "Press BACK to exit");
 
@@ -780,40 +773,43 @@ void handle_sensor_display()
 void handle_launch_program()
 {
     static uint32_t counter = 0;
-    static bool display_updated = false;  // 新增：显示更新标志
+    static bool display_updated = false; // 新增：显示更新标志
 
     switch (launch_state)
     {
     case 0: // 准备阶段
         // 只有当显示未更新或状态变化时才刷新屏幕
-        if (!display_updated) {
+        if (!display_updated)
+        {
             ips200_clear();
             ips200_show_string(10, 10, "Launch Program");
             ips200_draw_line(10, 30, 230, 30, RGB565_RED);
             ips200_show_string(15, 50, "Ready to launch");
             ips200_show_string(15, 80, "Press OK to start");
-						ips200_show_string(15, 110, "offset:");
-						
-					
-            display_updated = true;  // 标记显示已更新
+            ips200_show_string(15, 110, "offset:");
+
+            display_updated = true; // 标记显示已更新
         }
-ips200_show_int(80,110,turn_offset ,3);
+        ips200_show_int(80, 110, turn_offset, 3);
         if (button2)
         {
             launch_state = 1;
             car_run = 1; // 发车标志位
-            display_updated = false;  // 重置显示标志，触发下一状态的显示更新
+            right_circle_flag = 0;
+            pid_count = 0;
+            display_updated = false; // 重置显示标志，触发下一状态的显示更新
         }
         break;
 
     case 1: // 发车阶段
         // 只有当显示未更新或状态变化时才刷新屏幕
-        if (!display_updated) {
+        if (!display_updated)
+        {
             ips200_clear();
             ips200_show_string(10, 10, "Launch Program");
             ips200_draw_line(10, 30, 230, 30, RGB565_GREEN);
             ips200_show_string(15, 50, "Launching!");
-            display_updated = true;  // 标记显示已更新
+            display_updated = true; // 标记显示已更新
         }
 
         // 车辆运行控制代码可以放在这里
@@ -823,7 +819,8 @@ ips200_show_int(80,110,turn_offset ,3);
     }
 
     // 显示退出提示 - 只有在准备阶段才需要显示
-    if (launch_state == 0 && !display_updated) {
+    if (launch_state == 0 && !display_updated)
+    {
         ips200_show_string(10, 240, "Press BACK to exit");
     }
 
@@ -831,10 +828,13 @@ ips200_show_int(80,110,turn_offset ,3);
     if (button1)
     {
         car_run = 0;
-        display_mode = 0;  // 退出程序模式
-        launch_state = 0;  // 重置状态
-        is_clear_flag = 1; // 设置清屏标志
-        display_updated = false;  // 重置显示标志
+        zebra_count = 0;
+        speed_over = 0;
+        pid_count = 0;
+        display_mode = 0;        // 退出程序模式
+        launch_state = 0;        // 重置状态
+        is_clear_flag = 1;       // 设置清屏标志
+        display_updated = false; // 重置显示标志
 
         // 这里添加停止车辆的控制代码
         // 例如：motor_control(0); // 停止电机
@@ -973,8 +973,7 @@ void menu_init()
 
     /*---------------字符串索引初始化----------------*/
     index_xy_init();
-	
-	
+
 /*-----------------配置flash---------------*/
 #ifdef USE_FLASH
     flash_init_wz();
@@ -993,9 +992,6 @@ void menu_init()
     }
 #endif
 }
-
-
-
 
 /*
 以下是用户自己的自定义函数
@@ -1033,31 +1029,31 @@ void enter_launch_program()
 
 void NULL_FUN()
 {
-	
 }
 
+extern float Turn_kp1, Turn_kp2, Turn_kd1, Turn_kd2;
+extern int turn_start;
+extern int turn_end;
 
-
-
-
-extern float Turn_kp1, Turn_kp2 , Turn_kd1, Turn_kd2 ;
 extern float Velocity_Kp;
 extern int Target_Speed;
+
+extern int zebracount; // 元数次数菜单调节
 
 void UNIT_SET()
 {
     // 菜单单元调参参数初始化
-	
-	
-    unit_param_set(&Turn_kp1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp1");
-		unit_param_set(&Turn_kp2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp2");
-		unit_param_set(&Turn_kd1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd1");
-		unit_param_set(&Turn_kd2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd2");
-		unit_param_set(&Velocity_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Speed_kp");
-		unit_param_set(&Target_Speed, TYPE_INT, 1, 3, 3, NORMAL_PAR, "SPEED");
-    
-}
 
+    unit_param_set(&Turn_kp1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp1");
+    unit_param_set(&Turn_kp2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp2");
+    unit_param_set(&Turn_kd1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd1");
+    unit_param_set(&Turn_kd2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd2");
+    unit_param_set(&turn_start, TYPE_INT, 1, 3, 3, NORMAL_PAR, "turn_start");
+    unit_param_set(&turn_end, TYPE_INT, 1, 3, 3, NORMAL_PAR, "turn_end");
+    unit_param_set(&zebracount, TYPE_INT, 1, 3, 3, NORMAL_PAR, "zebracount");
+    unit_param_set(&Velocity_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Speed_kp");
+    unit_param_set(&Target_Speed, TYPE_INT, 1, 3, 3, NORMAL_PAR, "SPEED");
+}
 
 void FUN_INIT()
 {
@@ -1069,8 +1065,6 @@ void FUN_INIT()
     fun_init(enter_launch_program, "Launch");    // 发车程序入口
     fun_init(flash_save_parameters, "Save_Par"); // 保存参数功能
 }
-
-
 
 /*以下是历代版本的菜单*/
 /*
@@ -3467,4 +3461,3 @@ void FUN_INIT()
 //     fun_init(enter_sensor_display, "Sensor Data");     // 新增传感器数据显示入口
 //     fun_init(enter_launch_program, "Launch Program"); // 新增发车程序入口
 // }
-

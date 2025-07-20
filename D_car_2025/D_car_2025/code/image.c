@@ -24,8 +24,7 @@ int Left_Lost_Flag[MT9V03X_H];     // 左丢线数组，丢线置1，没丢线置0
 int Right_Lost_Flag[MT9V03X_H];    // 右丢线数组，丢线置1，没丢线置0
 
 /*特殊元素 */
-// 斑马线
-volatile int Zebra_Stripes_Flag = 0; // 斑马线
+
 // 十字
 volatile int Cross_Flag = 0;
 volatile int Left_Down_Find = 0; // 十字使用，找到被置行数，没找到就是0
@@ -42,8 +41,8 @@ volatile int Ramp_Flag = 0; // 坡道标志
 
 
 
-uint16 turn_start=51;
-uint16 turn_end=55;
+int turn_start=50;
+int turn_end=56;
 /*-------------------------------------------------------------------------------------------------------------------
   @brief     双最长白列巡线
   @param     null
@@ -54,8 +53,8 @@ uint16 turn_end=55;
 void Longest_White_Column() // 最长白列巡线
 {
     int i, j;
-    int start_column = 20;                 // 最长白列的搜索起始列
-    int end_column = MT9V03X_W - 20;       // 最长白列的搜索终止列
+    int start_column = 35;                 // 最长白列的搜索起始列
+    int end_column = MT9V03X_W - 35;       // 最长白列的搜索终止列
     int left_border = 0, right_border = 0; // 临时存储赛道位置
     Longest_White_Column_Left[0] = 0;      // 最长白列,[0]是最长白列的长度，[1】是第某列
     Longest_White_Column_Left[1] = 0;      // 最长白列,[0]是最长白列的长度，[1】是第某列
@@ -763,12 +762,12 @@ uint8 image_out_of_bounds(uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH])
     int sum = 0;
     for (int i = 0; i < 10; i++)
     {
-        for (int j = 0; j < 3; j++)
+        for (int j = 0; j < 2; j++)
         {
             sum += image_copy[IMAGE_HEIGHT - 1-j][IMAGE_WIDTH / 2 - 5 + i];
         }
     }
-    int average = sum / 30; // 计算平均值
+    int average = sum / 20; // 计算平均值
     if (average < 130)
     {
         return 1;

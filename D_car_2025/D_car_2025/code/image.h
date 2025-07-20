@@ -6,8 +6,8 @@
 #define TURN_STANDARD_START turn_start // 前瞻
 #define TURN_STANDARD_END turn_end	   // 前瞻
 
-extern uint16 turn_start;
-extern uint16 turn_end;
+extern int turn_start;
+extern int turn_end;
 extern volatile int Cross_Flag ;// 十字
 extern volatile int Island_State; // 环岛状态标志
 extern volatile int Ramp_Flag;    // 坡道

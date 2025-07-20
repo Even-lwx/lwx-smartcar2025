@@ -11,6 +11,11 @@
 #define DIR_R               (A2 )
 #define PWM_R               (TIM5_PWM_CH4_A3)
 
+
+
+extern uint8 zebra_count;
+extern int zebracount;//元数次数菜单调节
+extern uint8 speed_over;
 void motor_init();
 void Load(int motor1,int motor2);
 void Limit(int* motor1, int* motor2);

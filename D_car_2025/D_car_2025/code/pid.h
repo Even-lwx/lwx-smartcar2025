@@ -5,7 +5,9 @@
 
 
 extern uint8_t car_run; 
+extern uint32 pid_count;
 extern int turn_offset;
+extern int  Target_Speed ;
 
 void Control(void);
 

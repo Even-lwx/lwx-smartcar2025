@@ -831,6 +831,8 @@ void handle_launch_program()
         zebra_count = 0;
         speed_over = 0;
         pid_count = 0;
+			
+			
         display_mode = 0;        // 退出程序模式
         launch_state = 0;        // 重置状态
         is_clear_flag = 1;       // 设置清屏标志

@@ -85,7 +85,7 @@ void Longest_White_Column() // 最长白列巡线
     {
         if(right_circle_flag==2)
         {
-            start_column=110;
+            start_column=60;
             end_column=MT9V03X_W-20;
         }
     }
@@ -759,6 +759,10 @@ float err_sum_average(uint8 start_point, uint8 end_point)
  */
 uint8 image_out_of_bounds(uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH])
 {
+	if(Zebra_Detect())
+	{
+	return 0;
+	}
     int sum = 0;
     for (int i = 0; i < 10; i++)
     {

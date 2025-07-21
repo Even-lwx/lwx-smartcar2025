@@ -3,7 +3,7 @@
 
 #define PWM_MAX 8000
 #define PWM_MIN -8000
-#define SPEED_PROTECT 1000
+#define SPEED_PROTECT 200
 #define TURN_PPROTECT 6000
 // 电机的pwm是用的TIM5
 
@@ -56,6 +56,8 @@ void Load(int motor1, int motor2)
 	}
 }
 
+
+
 /**
   * @brief  电机速度限幅
   * @param  motor1：左电机速度
@@ -83,7 +85,7 @@ void motor_protect(int *motor1, int *motor2)
 	if (car_run == 1 && (abs(Encoder_Left) > SPEED_PROTECT || abs(Encoder_Right) > SPEED_PROTECT)) //||abs(Encoder_Left-Encoder_Right)>TURN_PPROTECT
 	{
 		speed_over++;
-		if (speed_over >= 40)
+		if (speed_over >= 50)
 		{
 			car_run = 0;
 			buzzer_on(1000);
@@ -95,13 +97,58 @@ void motor_protect(int *motor1, int *motor2)
 		speed_over = 0;
 	}
 	
-	if (pid_count > 15000)
-	{
+	
 		if (image_out_of_bounds(binaryImage))
 		{
 			car_run = 0;
 			buzzer_on(100);
 			Load(0, 0);
 		}
-	}
+	
 }
+
+
+
+//#define PWM_CH1                 (TIM5_PWM_CH1_A0)
+//#define PWM_CH2                 (TIM5_PWM_CH2_A1)
+//#define PWM_CH3                 (TIM5_PWM_CH3_A2)
+//#define PWM_CH4                 (TIM5_PWM_CH4_A3)
+//void motor_init()
+//{
+
+//	
+//	  pwm_init(PWM_CH1, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
+//    pwm_init(PWM_CH2, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
+//    pwm_init(PWM_CH3, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
+//    pwm_init(PWM_CH4, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
+//	ips200_show_string(10, 160, "motor init success");
+//}
+
+
+//void Load(int motor1, int motor2)
+//{
+//	
+//	if (motor1 < 0)
+//	{
+
+//		pwm_set_duty(TIM5_PWM_CH3_A2, abs(motor1)); // 计算占空比
+//		pwm_set_duty(	TIM5_PWM_CH4_A3,0);
+//	}
+//	else
+//	{
+//			pwm_set_duty(	TIM5_PWM_CH4_A3, abs(motor1)); // 计算占空比
+//pwm_set_duty(TIM5_PWM_CH3_A2,0);
+//	}
+//	if (motor2 < 0)
+//	{
+//		pwm_set_duty(TIM5_PWM_CH2_A1, abs(motor2)); // 计算占空比
+//		pwm_set_duty(TIM5_PWM_CH1_A0,0); // 计算占空比
+//	}
+//	else
+//	{
+//		pwm_set_duty(TIM5_PWM_CH2_A1,0); // 计算占空比
+//			pwm_set_duty(TIM5_PWM_CH1_A0, abs(motor2)); // 计算占空比
+//	}
+//	
+//}
+

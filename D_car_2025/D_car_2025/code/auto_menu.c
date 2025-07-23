@@ -685,6 +685,7 @@ void fun_menu()
 // 图像显示处理
 void handle_image_display()
 {
+	int display_image=0;
     // 绘制参考定位线
     ips200_draw_line(MT9V03X_W / 2, 0, MT9V03X_W / 2, MT9V03X_H, RGB565_YELLOW);
 
@@ -694,15 +695,20 @@ void handle_image_display()
     if (image_proess)
     {
 
-        //        // 显示原始图像
-        //        ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
-        //                               MT9V03X_W, MT9V03X_H,
-        //                               MT9V03X_W, MT9V03X_H, 0);
-
+               // 显示原始图像
+       if(display_image ==1)
+			 {				 
+			ips200_show_gray_image(0, 0, (const uint8 *)image_copy,
+                                      MT9V03X_W, MT9V03X_H,
+                                      MT9V03X_W, MT9V03X_H, 0);
+		}
         // 显示处理后的二值化图像
+			if(display_image ==0)
+			{
         ips200_show_gray_image(0, 0, (const uint8 *)binaryImage,
                                MT9V03X_W, MT9V03X_H,
                                MT9V03X_W, MT9V03X_H, 0);
+			}
         // 显示边界和中线图像
         for (int i = MT9V03X_H - 1; i >= MT9V03X_H - Search_Stop_Line; i--) // 从最底下往上扫描
         {
@@ -734,6 +740,12 @@ void handle_image_display()
         is_clear_flag = 1; // 设置清屏标志
         assist_menu();     // 刷新菜单显示
     }
+		if(button2)
+		{
+			
+		display_image ++;
+			display_image%=2;
+		}
 }
 
 // 传感器参数显示处理
@@ -1032,7 +1044,8 @@ void enter_launch_program()
 void NULL_FUN()
 {
 }
-
+extern float Gyro_Kp, Gyro_Ki ;
+extern float Vertical_Kp , Vertical_Kd ; // 直立环
 extern float Turn_kp1, Turn_kp2, Turn_kd1, Turn_kd2;
 extern int turn_start;
 extern int turn_end;
@@ -1045,7 +1058,13 @@ extern int zebracount; // 元数次数菜单调节
 void UNIT_SET()
 {
     // 菜单单元调参参数初始化
-
+		unit_param_set(& Gyro_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Gyro_Kp");
+    unit_param_set(&Gyro_Ki, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Gyro_Ki");
+    unit_param_set(&Vertical_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Vertical_Kp");
+    unit_param_set(&Vertical_Kd, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Vertical_Kd");
+		unit_param_set(&Velocity_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Speed_kp");
+    unit_param_set(&Target_Speed, TYPE_INT, 1, 3, 3, NORMAL_PAR, "SPEED");
+	
     unit_param_set(&Turn_kp1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp1");
     unit_param_set(&Turn_kp2, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kp2");
     unit_param_set(&Turn_kd1, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Turn_kd1");
@@ -1053,8 +1072,7 @@ void UNIT_SET()
     unit_param_set(&turn_start, TYPE_INT, 1, 3, 3, NORMAL_PAR, "turn_start");
     unit_param_set(&turn_end, TYPE_INT, 1, 3, 3, NORMAL_PAR, "turn_end");
     unit_param_set(&zebracount, TYPE_INT, 1, 3, 3, NORMAL_PAR, "zebracount");
-    unit_param_set(&Velocity_Kp, TYPE_FLOAT, 0.001, 3, 3, NORMAL_PAR, "Speed_kp");
-    unit_param_set(&Target_Speed, TYPE_INT, 1, 3, 3, NORMAL_PAR, "SPEED");
+    
 }
 
 void FUN_INIT()

@@ -9,7 +9,7 @@
 
 uint8 zebra_count;
 int zebracount = 2; // 元数次数菜单调节
-uint8 speed_over;
+uint8 speed_over;//连续过转的毫秒数
 /**
  * @brief  电机初始化
  * @param  无
@@ -56,8 +56,6 @@ void Load(int motor1, int motor2)
 	}
 }
 
-
-
 /**
   * @brief  电机速度限幅
   * @param  motor1：左电机速度
@@ -88,35 +86,34 @@ void motor_protect(int *motor1, int *motor2)
 		if (speed_over >= 50)
 		{
 			car_run = 0;
-			buzzer_on(1000);
 			Load(0, 0);
+			buzzer_on(1000);
+			
 		}
 	}
 	else
 	{
 		speed_over = 0;
 	}
-	
-	
-		if (image_out_of_bounds(binaryImage))
-		{
-			car_run = 0;
-			buzzer_on(100);
-			Load(0, 0);
-		}
-	
+
+	if (image_out_of_bounds(binaryImage))
+	{
+		car_run = 0;
+		buzzer_on(100);
+		Load(0, 0);
+	}
 }
 
+/*下面的代码是适用于4路pwm驱动的 */
 
-
-//#define PWM_CH1                 (TIM5_PWM_CH1_A0)
-//#define PWM_CH2                 (TIM5_PWM_CH2_A1)
-//#define PWM_CH3                 (TIM5_PWM_CH3_A2)
-//#define PWM_CH4                 (TIM5_PWM_CH4_A3)
-//void motor_init()
+// #define PWM_CH1                 (TIM5_PWM_CH1_A0)
+// #define PWM_CH2                 (TIM5_PWM_CH2_A1)
+// #define PWM_CH3                 (TIM5_PWM_CH3_A2)
+// #define PWM_CH4                 (TIM5_PWM_CH4_A3)
+// void motor_init()
 //{
 
-//	
+//
 //	  pwm_init(PWM_CH1, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
 //    pwm_init(PWM_CH2, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
 //    pwm_init(PWM_CH3, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
@@ -124,10 +121,9 @@ void motor_protect(int *motor1, int *motor2)
 //	ips200_show_string(10, 160, "motor init success");
 //}
 
-
-//void Load(int motor1, int motor2)
+// void Load(int motor1, int motor2)
 //{
-//	
+//
 //	if (motor1 < 0)
 //	{
 
@@ -137,7 +133,7 @@ void motor_protect(int *motor1, int *motor2)
 //	else
 //	{
 //			pwm_set_duty(	TIM5_PWM_CH4_A3, abs(motor1)); // 计算占空比
-//pwm_set_duty(TIM5_PWM_CH3_A2,0);
+// pwm_set_duty(TIM5_PWM_CH3_A2,0);
 //	}
 //	if (motor2 < 0)
 //	{
@@ -149,6 +145,5 @@ void motor_protect(int *motor1, int *motor2)
 //		pwm_set_duty(TIM5_PWM_CH2_A1,0); // 计算占空比
 //			pwm_set_duty(TIM5_PWM_CH1_A0, abs(motor2)); // 计算占空比
 //	}
-//	
+//
 //}
-

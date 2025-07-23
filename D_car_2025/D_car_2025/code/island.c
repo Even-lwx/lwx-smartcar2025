@@ -880,80 +880,17 @@ float Get_Right_K(int start_line, int end_line)
 /*==============================================================================================================
 ******************************************************************************************************************
                                             这是分割行
+                                            下面的代码是补边线进环的方法
 **********************************************************************************************************************
 ==================================================================================================================*/
 
-uint8 left_down_point;             // 左下拐点
-uint8 left_up_point;               // 左上拐点
-uint8 right_down_point;            // 右下拐点
-uint8 right_up_point;              // 右上拐点
-uint8 circle_flag;                 // 环岛标志位
-uint8 right_circle_flag;           // 右环岛标志
-uint8 circle_once_time = 0;        // 环岛标志位单次触发
-const uint8 road_wide[MT9V03X_H] = // 每行道宽数据
-    {
-        41, 42, 43, 45, 46, 47, 49, 49, 51, 53,
-        53, 55, 55, 57, 58, 59, 61, 62, 63, 64,
-        65, 67, 68, 69, 70, 72, 73, 74, 76, 76,
-        78, 79, 80, 82, 82, 84, 86, 86, 88, 88,
-        90, 91, 92, 94, 95, 96, 97, 98, 100, 100,
-        102, 103, 105, 105, 107, 108, 109, 111, 112, 113,
-        114, 116, 117, 118, 119, 120, 122, 123, 124, 126,
-        126, 128, 129, 130, 132, 132, 134, 134, 136, 138,
-        138, 140, 140, 142, 144, 144, 146, 146, 148, 149,
-        150, 151, 152, 154, 155, 156, 157, 158, 159, 161,
-        162, 163, 164, 165, 166, 167, 169, 170, 171, 172,
-        173, 175, 175, 177, 177, 179, 180, 181, 184, 184};
-
-/**
- *
- * @brief  左边界延长
- * @param  start_point 延长起点
- * @param  end_point   延长终点
- **/
-void lenthen_Left_Line(uint8 start_point, uint8 end_point)
-{
-    float k;
-    // 防止越界
-    if (start_point >= MT9V03X_H - 1)
-        start_point = MT9V03X_H - 1;
-    if (start_point < 0)
-        start_point = 0;
-    if (end_point >= MT9V03X_H - 1)
-        end_point = MT9V03X_H - 1;
-    if (end_point < 0)
-        end_point = 0;
-
-    if (end_point < start_point)
-    {
-        uint8 t = start_point;
-        start_point = end_point;
-        end_point = t;
-    }
-
-    if (start_point <= 5) // 起点过于靠上，直接连线
-    {
-        Left_Add_Line(Left_Line[start_point], start_point, Left_Line[end_point], end_point);
-    }
-    else
-    {
-        k = (float)(Left_Line[start_point] - Left_Line[start_point - 4]) / 5.0; // 斜率
-        for (uint8 i = start_point; i <= end_point; i++)
-        {
-            Left_Line[i] = Left_Line[start_point] + (int)(i - start_point) * k; // 使用斜率延长
-
-            if (Left_Line[i] < 1) // 防止越界
-            {
-                Left_Line[i] = 1;
-            }
-
-            if (Left_Line[i] >= MT9V03X_W - 2) // 防止越界
-            {
-                Left_Line[i] = MT9V03X_W - 2;
-            }
-        }
-    }
-}
+uint8 left_down_point;      // 左下拐点
+uint8 left_up_point;        // 左上拐点
+uint8 right_down_point;     // 右下拐点
+uint8 right_up_point;       // 右上拐点
+uint8 circle_flag;          // 环岛标志位
+uint8 right_circle_flag;    // 右环岛标志
+uint8 circle_once_time = 0; // 环岛标志位单次触发
 
 /**
  * @brief  左边界延长（从下往上）
@@ -1067,7 +1004,7 @@ void road_wide_draw_Left_Line(void)
 {
     for (int i = 0; i < MT9V03X_H - 1; i++)
     {
-        Left_Line[i] = Right_Line[i] - road_wide[i];
+        Left_Line[i] = Right_Line[i] - Road_Standard_Wide[i];
         if (Left_Line[i] < 1) // 防止越界
         {
             Left_Line[i] = 1;
@@ -1083,7 +1020,7 @@ void road_wide_draw_Right_Line(void)
 {
     for (int i = 0; i < MT9V03X_H - 1; i++)
     {
-        Right_Line[i] = Left_Line[i] + road_wide[i];
+        Right_Line[i] = Left_Line[i] + Road_Standard_Wide[i];
         if (Right_Line[i] >= MT9V03X_W - 2) // 防止越界
         {
             Right_Line[i] = MT9V03X_W - 2;
@@ -1580,7 +1517,7 @@ void circle_judge(void)
                 Right_Lost_Time <= 10 &&
                 Boundry_Start_Left >= MT9V03X_H - 8 &&
                 Boundry_Start_Right >= MT9V03X_H - 8 &&
-                Search_Stop_Line >= 100 )
+                Search_Stop_Line >= 100)
             {
             }
             if (continuity_left_change_flag <= 40 &&
@@ -1600,8 +1537,8 @@ void circle_judge(void)
                 right_circle_flag = 1; // 右圆环标志置1
                 circle_flag = 1;       // 环岛标志置1
 
-//                turn_start += 5;
-//                turn_end += 5;
+                //                turn_start += 5;
+                //                turn_end += 5;
             }
             else
             {
@@ -1642,8 +1579,8 @@ void circle_judge(void)
                 if (encoder_sum >= 16000)
                 {
                     right_circle_flag = 3;
-//                    turn_start -= 5;
-//                    turn_end -= 5;
+                    //                    turn_start -= 5;
+                    //                    turn_end -= 5;
                     if (car_run)
                     {
                         buzzer_on(50); // 蜂鸣器响

@@ -17,12 +17,25 @@ volatile int Boundry_Start_Left;                       // 左右边界起始点
 volatile int Boundry_Start_Right;                      // 第一个非丢线点,常规边界起始点
 volatile int Left_Lost_Time;                           // 边界丢线数
 volatile int Right_Lost_Time;
-volatile int Both_Lost_Time;       // 两边同时丢线数
-int Longest_White_Column_Left[2];  // 最长白列,[0]是最长白列的长度，也就是Search_Stop_Line搜索截止行，[1】是第某列
-int Longest_White_Column_Right[2]; // 最长白列,[0]是最长白列的长度，也就是Search_Stop_Line搜索截止行，[1】是第某列
-int Left_Lost_Flag[MT9V03X_H];     // 左丢线数组，丢线置1，没丢线置0
-int Right_Lost_Flag[MT9V03X_H];    // 右丢线数组，丢线置1，没丢线置0
-
+volatile int Both_Lost_Time;                // 两边同时丢线数
+int Longest_White_Column_Left[2];           // 最长白列,[0]是最长白列的长度，也就是Search_Stop_Line搜索截止行，[1】是第某列
+int Longest_White_Column_Right[2];          // 最长白列,[0]是最长白列的长度，也就是Search_Stop_Line搜索截止行，[1】是第某列
+int Left_Lost_Flag[MT9V03X_H];              // 左丢线数组，丢线置1，没丢线置0
+int Right_Lost_Flag[MT9V03X_H];             // 右Standard_丢线数组，丢线置1，没丢线置0
+const uint8 Road_Standard_Wide[MT9V03X_H] = // 每行道宽数据
+    {
+        41, 42, 43, 45, 46, 47, 49, 49, 51, 53,
+        53, 55, 55, 57, 58, 59, 61, 62, 63, 64,
+        65, 67, 68, 69, 70, 72, 73, 74, 76, 76,
+        78, 79, 80, 82, 82, 84, 86, 86, 88, 88,
+        90, 91, 92, 94, 95, 96, 97, 98, 100, 100,
+        102, 103, 105, 105, 107, 108, 109, 111, 112, 113,
+        114, 116, 117, 118, 119, 120, 122, 123, 124, 126,
+        126, 128, 129, 130, 132, 132, 134, 134, 136, 138,
+        138, 140, 140, 142, 144, 144, 146, 146, 148, 149,
+        150, 151, 152, 154, 155, 156, 157, 158, 159, 161,
+        162, 163, 164, 165, 166, 167, 169, 170, 171, 172,
+        173, 175, 175, 177, 177, 179, 180, 181, 184, 184};
 /*特殊元素 */
 
 // 十字
@@ -39,10 +52,8 @@ extern volatile int Ramp_Flag;    // 坡道
 // 坡道
 volatile int Ramp_Flag = 0; // 坡道标志
 
-
-
-int turn_start=50;
-int turn_end=56;
+int turn_start = 50;
+int turn_end = 53;
 /*-------------------------------------------------------------------------------------------------------------------
   @brief     双最长白列巡线
   @param     null
@@ -78,18 +89,17 @@ void Longest_White_Column() // 最长白列巡线
     {
         White_Column[i] = 0;
     }
-		
-		//环岛需要对最长白列范围进行限定，环岛3状态找不到上角点，可以修改下述参数
-    //环岛2状态需要改变最长白列寻找范围
-    if(circle_flag)//右环
+
+    // 环岛需要对最长白列范围进行限定，环岛3状态找不到上角点，可以修改下述参数
+    // 环岛2状态需要改变最长白列寻找范围
+    if (circle_flag) // 右环
     {
-        if(right_circle_flag==2)
+        if (right_circle_flag == 2)
         {
-            start_column=60;
-            end_column=MT9V03X_W-20;
+            start_column = 60;
+            end_column = MT9V03X_W - 20;
         }
     }
-   
 
     // 从左到右，从下往上，遍历全图记录范围内的每一列白点数量
     for (j = start_column; j <= end_column; j++)
@@ -177,6 +187,7 @@ void Longest_White_Column() // 最长白列巡线
         if (Boundry_Start_Right == 0 && Right_Lost_Flag[i] != 1)
             Boundry_Start_Right = i;
         Road_Wide[i] = Right_Line[i] - Left_Line[i];
+			//	printf("%d,%d\r\n",i, Road_Wide[i]);
     }
 
     // debug使用，屏幕显示相关参数
@@ -702,10 +713,10 @@ int Zebra_Detect(void)
     uint8 zebra_count = 0;
     if (Longest_White_Column_Left[1] > 20 && Longest_White_Column_Left[1] < IMAGE_WIDTH - 20 &&
         Longest_White_Column_Right[1] > 20 && Longest_White_Column_Right[1] < IMAGE_WIDTH - 20 &&
-        Search_Stop_Line >= 110)//增加条件限制，减少循环次数
-        for (int i = IMAGE_HEIGHT - 1; i >= IMAGE_HEIGHT - 3; i--)
+        Search_Stop_Line >= 110)                                   // 增加条件限制，减少循环次数
+        for (int i = IMAGE_HEIGHT - 1; i >= IMAGE_HEIGHT - 3; i--) // 取三行计数
         {
-            for (int j = 20; j <= IMAGE_WIDTH - 1 - 20; j++)//检测范围在左右20列之间
+            for (int j = 20; j <= IMAGE_WIDTH - 1 - 20; j++) // 检测范围在左右20列之间
             {
                 if (binaryImage[i][j] == IMG_WHITE && binaryImage[i][j + 1] == IMG_BLACK && binaryImage[i][j + 2] == IMG_BLACK)
                 {
@@ -717,8 +728,82 @@ int Zebra_Detect(void)
                 return 1;
             }
         }
-        
+
     return 0;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------
+  @brief     坡道判断
+  @param     null
+  @return
+  Sample
+  @note
+-------------------------------------------------------------------------------------------------------------------*/
+void Ramp_Detect(void)
+{
+    static int Encoder_Sum_Last, Encoder_Sum;
+    int i = 0;
+    int count = 0;
+    // 与十字、环岛的互斥
+    if (Cross_Flag != 0 || Island_State != 0)
+    {
+        return;
+    }
+
+    if (Search_Stop_Line >= 66) // 截止行长满足条件时进入检测
+    {
+        // 从图像底部向上遍历搜索截止行范围内的行
+        for (i = MT9V03X_H - 1; i > MT9V03X_H - Search_Stop_Line; i--)
+        {
+
+            if (Road_Wide[i] > Road_Standard_Wide[i] + 15) // 赛道宽度超过标准宽度+10
+            {
+                count++; // 累计超宽行数
+            }
+        }
+    }
+
+    if (count >= 10) // 超宽行数量达到阈值
+    {
+        buzzer_on(50);
+        int err;
+        Encoder_Sum = Encoder_Left + Encoder_Left;
+        err = Encoder_Sum - Encoder_Sum_Last;
+        Encoder_Sum_Last = Encoder_Sum;
+        if (Ramp_Flag == 0) // 初始状态，进入坡道前
+        {
+
+            /*坡道前的调整 */
+
+            if (err < -100) // 这里是在坡道上的特征(减速)
+            {
+                //buzzer_on(50);
+                Ramp_Flag = 1;
+            }
+        }
+        else if (Ramp_Flag == 1)
+        {
+            /*坡道上*/
+            if (err > 100) // 开始下坡(加速)
+            {
+                //buzzer_on(50);
+                Ramp_Flag = 2;
+            }
+        }
+        else if (Ramp_Flag == 2) // 正在下坡状态
+        {
+            /*下坡的调整*/
+
+            if (encoder_sum > 30000) // 完成坡道的特征
+            {
+                //buzzer_on(50);
+                Ramp_Flag = 0;
+            }
+        }
+    }
+
+    // 调试用：显示超宽行计数（适配目标程序的显示函数）
+    // ips200_showuint8(50, 10*16, count, 5);
 }
 
 /**
@@ -753,22 +838,22 @@ float err_sum_average(uint8 start_point, uint8 end_point)
 }
 
 /**
- * @brief   出界判断,选取图像底部中间10*3区域进行判断
+ * @brief   出界判断,选取图像底部中间10*2区域进行判断
  * @param   *binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH]  原始图像
  * @retval   0:正常 1:出界
  */
 uint8 image_out_of_bounds(uint8 binaryImage[IMAGE_HEIGHT][IMAGE_WIDTH])
 {
-	if(Zebra_Detect())
-	{
-	return 0;
-	}
+    if (Zebra_Detect())
+    {
+        return 0;
+    }
     int sum = 0;
     for (int i = 0; i < 10; i++)
     {
         for (int j = 0; j < 2; j++)
         {
-            sum += image_copy[IMAGE_HEIGHT - 1-j][IMAGE_WIDTH / 2 - 5 + i];
+            sum += image_copy[IMAGE_HEIGHT - 1 - j][IMAGE_WIDTH / 2 - 5 + i];
         }
     }
     int average = sum / 20; // 计算平均值

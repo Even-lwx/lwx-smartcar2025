@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\MM32F327X_G8P.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\MM32F327X_G8P.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6230001: Last Updated: Mon Jul 21 20:54:05 2025
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6230001: Last Updated: Wed Jul 23 20:52:10 2025
 <BR><P>
 <H3>Maximum Stack Usage =       2432 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -998,7 +998,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_mm32f3277g.o(RESET)
 </UL>
-<P><STRONG><a name="[96]"></a>UNIT_SET</STRONG> (Thumb, 380 bytes, Stack size 40 bytes, auto_menu.o(.text.UNIT_SET))
+<P><STRONG><a name="[96]"></a>UNIT_SET</STRONG> (Thumb, 548 bytes, Stack size 40 bytes, auto_menu.o(.text.UNIT_SET))
 <BR><BR>[Stack]<UL><LI>Max Depth = 140<LI>Call Chain = UNIT_SET &rArr; unit_param_set &rArr; dad_link
 </UL>
 <BR>[Calls]<UL><LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;unit_param_set
@@ -1101,7 +1101,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;all_init
 </UL>
 
-<P><STRONG><a name="[a3]"></a>buzzer_on</STRONG> (Thumb, 38 bytes, Stack size 16 bytes, buzzer.o(.text.buzzer_on))
+<P><STRONG><a name="[a3]"></a>buzzer_on</STRONG> (Thumb, 78 bytes, Stack size 16 bytes, buzzer.o(.text.buzzer_on))
 <BR><BR>[Stack]<UL><LI>Max Depth = 720<LI>Call Chain = buzzer_on &rArr; system_delay_ms &rArr; debug_assert_handler &rArr; debug_output &rArr; sprintf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_set_level
@@ -1651,8 +1651,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[2d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART2_IRQHandler
 </UL>
 
-<P><STRONG><a name="[f1]"></a>handle_image_display</STRONG> (Thumb, 526 bytes, Stack size 88 bytes, auto_menu.o(.text.handle_image_display))
-<BR><BR>[Stack]<UL><LI>Max Depth = 928<LI>Call Chain = handle_image_display &rArr; ips200_show_int &rArr; ips200_show_string &rArr; ips200_show_char &rArr; ips200_set_region &rArr; debug_assert_handler &rArr; debug_output &rArr; sprintf
+<P><STRONG><a name="[f1]"></a>handle_image_display</STRONG> (Thumb, 612 bytes, Stack size 96 bytes, auto_menu.o(.text.handle_image_display))
+<BR><BR>[Stack]<UL><LI>Max Depth = 936<LI>Call Chain = handle_image_display &rArr; ips200_show_int &rArr; ips200_show_string &rArr; ips200_show_char &rArr; ips200_set_region &rArr; debug_assert_handler &rArr; debug_output &rArr; sprintf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[f4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ips200_draw_point
 <LI><a href="#[f3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ips200_show_gray_image
@@ -2008,7 +2008,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;all_init
 </UL>
 
-<P><STRONG><a name="[7f]"></a>motor_protect</STRONG> (Thumb, 212 bytes, Stack size 40 bytes, motor.o(.text.motor_protect))
+<P><STRONG><a name="[7f]"></a>motor_protect</STRONG> (Thumb, 208 bytes, Stack size 40 bytes, motor.o(.text.motor_protect))
 <BR><BR>[Stack]<UL><LI>Max Depth = 816<LI>Call Chain = motor_protect &rArr; Load &rArr; pwm_set_duty &rArr; debug_assert_handler &rArr; debug_output &rArr; sprintf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[f7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;image_out_of_bounds

@@ -49,7 +49,7 @@
 #define CONTROL_IRQn (TIM6_IRQn)
 
 uint32 system_count = 0, system_lastcount = 0, system_lastcount_zebra;
-uint8 count;//几轮连续检测到斑马线的次数
+uint8 count; // 几轮连续检测到斑马线的次数
 uint8 zebra_finish_flag;
 int threshold;
 int image_proess = 0; // 图像处理完成标志位
@@ -94,9 +94,12 @@ int main(void)
 		}
 		applyThreshold(image_copy, binaryImage, threshold); // 应用阈值生成二值化图像
 
+		
+		
 		Longest_White_Column();
 		Cross_Detect();
-		//circle_judge();
+		// circle_judge();
+	//	Ramp_Detect();														   // 坡道检测
 		turn_offset = err_sum_average(TURN_STANDARD_START, TURN_STANDARD_END); // 转向偏差（左正右负）
 																			   //		if(right_circle_flag==2)
 																			   //		{
@@ -106,13 +109,13 @@ int main(void)
 		if (Zebra_Detect())
 		{
 			count++;
-			if (count >= 2&&zebra_finish_flag==0) // 连续5帧检测到算是
+			if (count >= 3 && zebra_finish_flag == 0) // 连续5帧检测到算是
 			{
-				zebra_finish_flag=1;
+				zebra_finish_flag = 1;
 				zebra_count++;
-				if(car_run ==1)
+				if (car_run == 1)
 				{
-				buzzer_on (50);
+					buzzer_on(50);
 				}
 			}
 
@@ -131,7 +134,7 @@ int main(void)
 		}
 		else
 		{
-			zebra_finish_flag=0;
+			zebra_finish_flag = 0;
 			count = 0;
 		}
 		system_count++;

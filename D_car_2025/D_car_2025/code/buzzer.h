@@ -3,7 +3,7 @@
 #include "zf_common_typedef.h"
 
 void buzzer_init();
-void buzzer_on(uint16 tim);
+void buzzer_on(int16 tim);
 
 
 

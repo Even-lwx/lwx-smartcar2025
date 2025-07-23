@@ -30,4 +30,6 @@ void pit_encoder_handler(void)
     {
       encoder_sum += (Encoder_Left+Encoder_Right);
     }
+		
+		
 }

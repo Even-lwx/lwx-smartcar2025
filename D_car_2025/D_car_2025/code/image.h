@@ -16,13 +16,20 @@ extern volatile int Ramp_Flag;    // 坡道
 
 extern volatile int Left_Line[MT9V03X_H];  // 左边线数组
 extern volatile int Right_Line[MT9V03X_H]; // 右边线数组
+extern const uint8 Road_Standard_Wide[MT9V03X_H];
 extern volatile int Search_Stop_Line;
 extern int Longest_White_Column_Left[2];  // 最长白列,[0]是最长白列的长度，也就是Search_Stop_Line搜索截止行，[1】是第某列
 extern int Longest_White_Column_Right[2]; // 最长白列,[0]是最长白列的长度，也就是Search_Stop_Line搜索截止行，[1】是第某列
 extern volatile int Zebra_Stripes_Flag;   // 斑马线标志位
 void Longest_White_Column(void);
+/*元素*/
 void Cross_Detect(void);
 int Zebra_Detect(void);
+void Ramp_Detect(void);
+
+
+
+
 void Show_Boundry(void);
 void Find_Up_Point(int start, int end);
 void Find_Down_Point(int start, int end);
